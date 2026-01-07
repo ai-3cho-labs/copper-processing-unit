@@ -56,7 +56,7 @@ export function MiniLeaderboard({
         showViewAll && (
           <Link
             href="/leaderboard"
-            className="text-xs text-copper hover:text-copper-glow transition-colors lg:font-mono"
+            className="text-xs text-white hover:text-gray-300 transition-colors lg:font-mono"
           >
             View All →
           </Link>
@@ -65,7 +65,7 @@ export function MiniLeaderboard({
     >
       <div className="space-y-1">
         {/* Header Row - Desktop only */}
-        <div className="hidden lg:grid grid-cols-12 gap-2 px-2 py-1 text-xs font-mono text-copper-dim border-b border-terminal-border">
+        <div className="hidden lg:grid grid-cols-12 gap-2 px-2 py-1 text-xs font-mono text-gray-500 border-b border-terminal-border">
           <div className="col-span-2">RANK</div>
           <div className="col-span-5">MINER</div>
           <div className="col-span-2 text-center">TIER</div>
@@ -93,11 +93,11 @@ export function MiniLeaderboard({
             <div className="flex items-center justify-center py-1 text-zinc-600">
               <span className="text-xs lg:font-mono">• • •</span>
             </div>
-            <div className="px-2 py-1.5 rounded bg-copper/5 border border-copper/20">
+            <div className="px-2 py-1.5 rounded bg-white/5 border border-white/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <RankBadge rank={userRank} size="sm" />
-                  <span className="text-xs text-copper lg:font-mono">You</span>
+                  <span className="text-xs text-white lg:font-mono">You</span>
                 </div>
                 <span className="text-xs text-zinc-500">
                   Keep holding to climb!
@@ -127,7 +127,7 @@ function LeaderboardRow({
         'grid grid-cols-12 gap-2 px-2 py-1.5 rounded items-center',
         'transition-colors',
         isCurrentUser
-          ? 'bg-copper/10 border border-copper/20'
+          ? 'bg-white/10 border border-white/20'
           : 'hover:bg-zinc-800/50'
       )}
     >
@@ -141,7 +141,7 @@ function LeaderboardRow({
         <span
           className={cn(
             'text-sm truncate',
-            isCurrentUser ? 'text-copper font-medium' : 'text-zinc-300'
+            isCurrentUser ? 'text-white font-medium' : 'text-zinc-300'
           )}
         >
           {isCurrentUser ? 'You' : entry.walletShort}
@@ -160,7 +160,7 @@ function LeaderboardRow({
         <span
           className={cn(
             'text-sm tabular-nums lg:font-mono',
-            isCurrentUser ? 'text-terminal-green' : 'text-zinc-400'
+            isCurrentUser ? 'text-white glow-white' : 'text-zinc-400'
           )}
         >
           {formatCompactNumber(entry.hashPower)}

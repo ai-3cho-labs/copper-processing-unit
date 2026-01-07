@@ -2,7 +2,7 @@
 
 import { formatUSD, formatCompactNumber } from '@/lib/utils';
 import type { PoolInfo } from '@/types/models';
-import { DISTRIBUTION_THRESHOLD_USD } from '@/types/models';
+import { PAYOUT_THRESHOLD_USD } from '@/types/models';
 import {
   TerminalCard,
   ProgressBar,
@@ -57,10 +57,10 @@ export function PendingRewards({
       <div className="space-y-4">
         {/* Pending Reward Amount */}
         <div className="text-center py-2">
-          <div className="text-xs text-zinc-500 mb-1 lg:font-mono lg:text-copper-dim">
+          <div className="text-xs text-zinc-500 mb-1 lg:font-mono lg:text-gray-500">
             YOUR ESTIMATED REWARD
           </div>
-          <div className="text-3xl lg:text-4xl font-bold text-terminal-green lg:font-mono tabular-nums">
+          <div className="text-3xl lg:text-4xl font-bold text-white glow-white lg:font-mono tabular-nums">
             +{formatCompactNumber(Math.floor(animatedReward))}
           </div>
           <div className="text-sm text-zinc-500 mt-1">$COPPER</div>
@@ -71,11 +71,11 @@ export function PendingRewards({
           <div className="space-y-3">
             {/* Pool Value */}
             <div className="flex items-center justify-between text-sm">
-              <span className="text-zinc-500 lg:font-mono lg:text-copper-dim">
+              <span className="text-zinc-500 lg:font-mono lg:text-gray-500">
                 Pool Value
               </span>
               <span className="font-medium text-zinc-100 lg:font-mono">
-                {formatUSD(pool.valueUsd)} / {formatUSD(DISTRIBUTION_THRESHOLD_USD)}
+                {formatUSD(pool.valueUsd)} / {formatUSD(PAYOUT_THRESHOLD_USD)}
               </span>
             </div>
 
@@ -83,13 +83,13 @@ export function PendingRewards({
             <div className="hidden lg:block">
               <AsciiProgressBar
                 value={pool.progressToThreshold}
-                variant={pool.thresholdMet ? 'green' : 'copper'}
+                variant="default"
               />
             </div>
             <div className="lg:hidden">
               <ProgressBar
                 value={pool.progressToThreshold}
-                variant={pool.thresholdMet ? 'green' : 'copper'}
+                variant="default"
                 size="md"
               />
             </div>
@@ -101,7 +101,7 @@ export function PendingRewards({
                   ? 'Threshold trigger'
                   : pool.nextTrigger === 'time'
                     ? 'Time trigger'
-                    : 'Next distribution'}
+                    : 'Next payout'}
               </div>
               <CountdownDisplay countdown={countdown} pool={pool} />
             </div>
@@ -110,9 +110,9 @@ export function PendingRewards({
 
         {/* Ready State */}
         {pool?.thresholdMet && (
-          <div className="text-center py-2 px-4 rounded bg-terminal-green/10 border border-terminal-green/30">
-            <span className="text-sm text-terminal-green lg:font-mono">
-              Distribution threshold reached!
+          <div className="text-center py-2 px-4 rounded bg-white/10 border border-white/30">
+            <span className="text-sm text-white glow-white lg:font-mono">
+              Payout threshold reached!
             </span>
           </div>
         )}
@@ -133,7 +133,7 @@ function CountdownDisplay({
 }) {
   if (pool.thresholdMet || pool.timeTriggerMet) {
     return (
-      <span className="text-sm font-medium text-terminal-green lg:font-mono">
+      <span className="text-sm font-medium text-white glow-white lg:font-mono">
         READY
       </span>
     );
@@ -142,11 +142,11 @@ function CountdownDisplay({
   return (
     <div className="text-right">
       {/* Desktop: Full countdown */}
-      <span className="hidden lg:inline text-sm font-mono text-copper tabular-nums">
+      <span className="hidden lg:inline text-sm font-mono text-white tabular-nums">
         {countdown.formatted}
       </span>
       {/* Mobile: Compact countdown */}
-      <span className="lg:hidden text-sm font-medium text-copper">
+      <span className="lg:hidden text-sm font-medium text-white">
         {countdown.formattedCompact}
       </span>
     </div>
@@ -172,13 +172,13 @@ function PendingRewardsCompact({
       <div className="flex items-center justify-between">
         <div>
           <div className="text-xs text-zinc-500">Pending</div>
-          <div className="text-lg font-bold text-terminal-green tabular-nums">
+          <div className="text-lg font-bold text-white glow-white tabular-nums">
             +{formatCompactNumber(pendingReward)}
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xs text-zinc-500">Next drop</div>
-          <div className="text-sm font-medium text-copper">
+          <div className="text-xs text-zinc-500">Next payout</div>
+          <div className="text-sm font-medium text-white">
             {pool?.thresholdMet || pool?.timeTriggerMet
               ? 'READY'
               : countdown.formattedCompact}
@@ -189,7 +189,7 @@ function PendingRewardsCompact({
         <div className="mt-2">
           <ProgressBar
             value={pool.progressToThreshold}
-            variant={pool.thresholdMet ? 'green' : 'copper'}
+            variant="default"
             size="sm"
           />
         </div>

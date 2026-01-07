@@ -49,7 +49,7 @@ export function BuybackFeed({
       title="BUYBACK FEED"
       className={className}
       headerRight={
-        <Badge variant="green" size="sm">
+        <Badge variant="accent" size="sm">
           LIVE
         </Badge>
       }
@@ -65,11 +65,11 @@ export function BuybackFeed({
             {showPoolTotal && poolBalance !== undefined && (
               <div className="pt-2 mt-2 border-t border-zinc-800 lg:border-terminal-border">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-500 lg:font-mono lg:text-copper-dim">
+                  <span className="text-zinc-500 lg:font-mono lg:text-gray-500">
                     Pool Total
                   </span>
                   <div className="text-right">
-                    <span className="font-medium text-terminal-green lg:font-mono">
+                    <span className="font-medium text-white glow-white lg:font-mono">
                       {formatCompactNumber(poolBalance)} $COPPER
                     </span>
                     {poolValueUsd !== undefined && (
@@ -116,10 +116,10 @@ function BuybackRow({ buyback }: { buyback: FormattedBuyback }) {
       {/* Desktop Layout */}
       <div className="hidden lg:flex items-center justify-between font-mono text-sm">
         <div className="flex items-center gap-3">
-          <span className="text-copper-dim">[{buyback.timeAgo}]</span>
-          <span className="text-terminal-amber">{formatSOL(buyback.solAmount, 2)}</span>
+          <span className="text-gray-500">[{buyback.timeAgo}]</span>
+          <span className="text-gray-400">{formatSOL(buyback.solAmount, 2)}</span>
           <span className="text-zinc-600">→</span>
-          <span className="text-terminal-green">
+          <span className="text-white">
             {formatCompactNumber(buyback.copperAmount)} $COPPER
           </span>
         </div>
@@ -132,7 +132,7 @@ function BuybackRow({ buyback }: { buyback: FormattedBuyback }) {
       <div className="lg:hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-terminal-green font-medium">
+            <span className="text-white glow-white font-medium">
               +{formatCompactNumber(buyback.copperAmount)}
             </span>
             <span className="text-xs text-zinc-500">$COPPER</span>

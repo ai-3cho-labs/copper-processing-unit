@@ -67,7 +67,7 @@ export function TierProgress({
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-medium text-copper lg:font-mono">
+            <div className="text-sm font-medium text-white lg:font-mono">
               {streakDays}d streak
             </div>
             <div className="text-xs text-zinc-500">
@@ -80,7 +80,7 @@ export function TierProgress({
         {!isMaxTier && nextTier && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-500 lg:font-mono lg:text-copper-dim">
+              <span className="text-zinc-500 lg:font-mono lg:text-gray-500">
                 Progress to {nextTier.name}
               </span>
               <span className="text-zinc-400 lg:font-mono">
@@ -94,7 +94,7 @@ export function TierProgress({
             <div className="hidden lg:block">
               <AsciiProgressBar
                 value={progress}
-                variant="copper"
+                variant="default"
               />
             </div>
 
@@ -102,7 +102,7 @@ export function TierProgress({
             <div className="lg:hidden">
               <ProgressBar
                 value={progress}
-                variant="copper"
+                variant="default"
                 showLabel
                 size="md"
               />
@@ -112,8 +112,8 @@ export function TierProgress({
 
         {/* Max Tier Message */}
         {isMaxTier && (
-          <div className="text-center py-2 px-4 rounded bg-copper/10 border border-copper/20">
-            <span className="text-sm text-copper lg:font-mono">
+          <div className="text-center py-2 px-4 rounded bg-white/10 border border-white/20">
+            <span className="text-sm text-white lg:font-mono">
               Maximum tier achieved! Enjoying {formatMultiplier(tier.multiplier)}{' '}
               bonus
             </span>
@@ -135,7 +135,7 @@ function TierTimeline({ currentTier }: { currentTier: TierId }) {
 
   return (
     <div className="pt-3 border-t border-zinc-800 lg:border-terminal-border">
-      <div className="text-xs text-zinc-500 mb-2 lg:font-mono lg:text-copper-dim">
+      <div className="text-xs text-zinc-500 mb-2 lg:font-mono lg:text-gray-500">
         TIER PROGRESSION
       </div>
       <div className="flex items-center gap-1">
@@ -152,8 +152,8 @@ function TierTimeline({ currentTier }: { currentTier: TierId }) {
                   'relative flex items-center justify-center',
                   'w-8 h-8 rounded-full text-sm',
                   'transition-all duration-200',
-                  isActive && 'bg-copper/20 ring-2 ring-copper scale-110',
-                  isPast && 'bg-terminal-green/20',
+                  isActive && 'bg-white/20 ring-2 ring-white scale-110',
+                  isPast && 'bg-white/20',
                   !isActive && !isPast && 'bg-zinc-800'
                 )}
                 title={`${config.name} (${formatMultiplier(config.multiplier)})`}
@@ -168,7 +168,7 @@ function TierTimeline({ currentTier }: { currentTier: TierId }) {
                 <div
                   className={cn(
                     'w-3 h-0.5 lg:w-4',
-                    isPast ? 'bg-terminal-green/50' : 'bg-zinc-700'
+                    isPast ? 'bg-white/50' : 'bg-zinc-700'
                   )}
                 />
               )}

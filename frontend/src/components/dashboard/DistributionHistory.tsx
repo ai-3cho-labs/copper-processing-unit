@@ -64,7 +64,7 @@ export function DistributionHistory({
         showViewAll && (
           <Link
             href="/history"
-            className="text-xs text-copper hover:text-copper-glow transition-colors lg:font-mono"
+            className="text-xs text-white hover:text-gray-300 transition-colors lg:font-mono"
           >
             View All →
           </Link>
@@ -75,7 +75,7 @@ export function DistributionHistory({
         {displayHistory.length > 0 ? (
           <>
             {/* Desktop Table Header */}
-            <div className="hidden lg:grid grid-cols-12 gap-2 px-2 py-1 text-xs font-mono text-copper-dim border-b border-terminal-border">
+            <div className="hidden lg:grid grid-cols-12 gap-2 px-2 py-1 text-xs font-mono text-gray-500 border-b border-terminal-border">
               <div className="col-span-3">DATE</div>
               <div className="col-span-3 text-right">AMOUNT</div>
               <div className="col-span-3 text-right">HASH PWR</div>
@@ -91,10 +91,10 @@ export function DistributionHistory({
             {history && history.length > 0 && (
               <div className="pt-2 mt-2 border-t border-zinc-800 lg:border-terminal-border">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-500 lg:font-mono lg:text-copper-dim">
+                  <span className="text-zinc-500 lg:font-mono lg:text-gray-500">
                     Total Received
                   </span>
-                  <span className="font-medium text-terminal-green lg:font-mono">
+                  <span className="font-medium text-white glow-white lg:font-mono">
                     {formatCOPPER(totalReceived, true)}
                   </span>
                 </div>
@@ -128,13 +128,13 @@ function DistributionRow({ item }: { item: DistributionHistoryItem }) {
       {/* Desktop Layout */}
       <div className="hidden lg:grid grid-cols-12 gap-2 items-center font-mono text-sm">
         <div className="col-span-3 text-zinc-400">{item.timeAgo}</div>
-        <div className="col-span-3 text-right text-terminal-green">
+        <div className="col-span-3 text-right text-white glow-white">
           +{formatCompactNumber(item.amount)}
         </div>
         <div className="col-span-3 text-right text-zinc-400">
           {formatCompactNumber(item.hashPower)}
         </div>
-        <div className="col-span-3 text-right text-copper">
+        <div className="col-span-3 text-right text-white">
           {formatPercent(item.sharePercent, 2)}
         </div>
       </div>
@@ -142,7 +142,7 @@ function DistributionRow({ item }: { item: DistributionHistoryItem }) {
       {/* Mobile Layout */}
       <div className="lg:hidden">
         <div className="flex items-center justify-between">
-          <span className="text-terminal-green font-medium">
+          <span className="text-white glow-white font-medium">
             +{formatCompactNumber(item.amount)} $COPPER
           </span>
           <span className="text-xs text-zinc-500">{item.timeAgo}</span>

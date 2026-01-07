@@ -14,11 +14,15 @@ export type { PendingRewardsProps } from './PendingRewards';
 export { MiniLeaderboard } from './MiniLeaderboard';
 export type { MiniLeaderboardProps } from './MiniLeaderboard';
 
-export { BuybackFeed } from './BuybackFeed';
-export type { BuybackFeedProps } from './BuybackFeed';
+export { RewardActivity } from './RewardActivity';
+export type { RewardActivityProps } from './RewardActivity';
 
-export { DistributionHistory } from './DistributionHistory';
+export { RewardHistory } from './RewardHistory';
 export type {
-  DistributionHistoryProps,
-  DistributionHistoryItem,
-} from './DistributionHistory';
+  RewardHistoryProps,
+  RewardHistoryItem,
+} from './RewardHistory';
+
+// Legacy exports for backwards compatibility during migration
+export { RewardActivity as BuybackFeed } from './RewardActivity';
+export { RewardHistory as DistributionHistory } from './RewardHistory';

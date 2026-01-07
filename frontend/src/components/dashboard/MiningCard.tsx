@@ -59,12 +59,12 @@ export function MiningCard({
         {/* Balance Section */}
         <div className="space-y-1">
           <div className="flex items-baseline justify-between">
-            <span className="text-xs text-zinc-500 lg:font-mono lg:text-copper-dim">
+            <span className="text-xs text-zinc-500 lg:font-mono lg:text-gray-500">
               BALANCE
             </span>
             <TierBadge tier={data.tier} showMultiplier size="sm" />
           </div>
-          <div className="text-2xl lg:text-3xl font-bold text-zinc-100 lg:font-mono lg:text-copper tabular-nums">
+          <div className="text-2xl lg:text-3xl font-bold text-zinc-100 lg:font-mono lg:text-white tabular-nums">
             {formatCOPPER(data.balance, true)}
           </div>
         </div>
@@ -91,10 +91,10 @@ export function MiningCard({
         {data.pendingReward > 0 && (
           <div className="pt-3 border-t border-zinc-800 lg:border-terminal-border">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-500 lg:font-mono lg:text-copper-dim">
+              <span className="text-xs text-zinc-500 lg:font-mono lg:text-gray-500">
                 PENDING REWARD
               </span>
-              <span className="text-sm font-medium text-terminal-green lg:font-mono">
+              <span className="text-sm font-medium text-white glow-white lg:font-mono">
                 +{formatCompactNumber(data.pendingReward)} $COPPER
               </span>
             </div>
@@ -151,14 +151,14 @@ function StatItem({
 }) {
   return (
     <div className="space-y-0.5">
-      <div className="text-xs text-zinc-500 lg:font-mono lg:text-copper-dim">
+      <div className="text-xs text-zinc-500 lg:font-mono lg:text-gray-500">
         {label}
       </div>
       <div
         className={cn(
           'text-lg font-semibold tabular-nums',
           highlight
-            ? 'text-terminal-green lg:text-terminal-green'
+            ? 'text-white glow-white'
             : 'text-zinc-100 lg:text-zinc-100'
         )}
       >
