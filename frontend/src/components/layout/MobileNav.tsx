@@ -65,12 +65,13 @@ const NAV_ITEMS = [
 
 /**
  * Mobile bottom navigation
+ * Monochrome terminal aesthetic
  */
 export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800 safe-area-bottom">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 safe-area-bottom">
       <div className="flex items-center justify-around h-16 px-2">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
@@ -80,7 +81,7 @@ export function MobileNav() {
               href={item.href}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-colors',
-                isActive ? 'text-copper' : 'text-zinc-500'
+                isActive ? 'text-white' : 'text-gray-500'
               )}
             >
               <span

@@ -32,6 +32,7 @@ const FOOTER_LINKS = [
 
 /**
  * Desktop footer
+ * Monochrome terminal aesthetic
  */
 export function Footer() {
   return (
@@ -41,21 +42,21 @@ export function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" className="inline-block mb-4">
-              <span className="text-xl font-bold text-copper">$COPPER</span>
+              <span className="text-xl font-bold text-white">$COPPER</span>
             </Link>
-            <p className="text-sm text-zinc-500 font-mono">
+            <p className="text-sm text-gray-500 font-mono">
               Mine rewards by holding.
               <br />
               Build your streak.
               <br />
-              Earn airdrops.
+              Get paid.
             </p>
           </div>
 
           {/* Link columns */}
           {FOOTER_LINKS.map((section) => (
             <div key={section.title}>
-              <h3 className="text-sm font-semibold text-zinc-300 mb-4 font-mono">
+              <h3 className="text-sm font-semibold text-gray-300 mb-4 font-mono">
                 {section.title}
               </h3>
               <ul className="space-y-2">
@@ -66,7 +67,7 @@ export function Footer() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-zinc-500 hover:text-copper transition-colors font-mono"
+                        className="text-sm text-gray-500 hover:text-white transition-colors font-mono"
                       >
                         {link.label}
                         <span className="ml-1 text-xs">↗</span>
@@ -74,7 +75,7 @@ export function Footer() {
                     ) : (
                       <Link
                         href={link.href}
-                        className="text-sm text-zinc-500 hover:text-copper transition-colors font-mono"
+                        className="text-sm text-gray-500 hover:text-white transition-colors font-mono"
                       >
                         {link.label}
                       </Link>
@@ -88,10 +89,10 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-terminal-border flex items-center justify-between">
-          <p className="text-xs text-zinc-600 font-mono">
+          <p className="text-xs text-gray-600 font-mono">
             &copy; {new Date().getFullYear()} $COPPER. All rights reserved.
           </p>
-          <p className="text-xs text-zinc-600 font-mono">
+          <p className="text-xs text-gray-600 font-mono">
             Built on Solana
           </p>
         </div>
@@ -107,7 +108,7 @@ export function SimpleFooter({ className }: { className?: string }) {
   return (
     <footer
       className={cn(
-        'hidden lg:block py-6 text-center text-xs text-zinc-600 font-mono',
+        'hidden lg:block py-6 text-center text-xs text-gray-600 font-mono',
         className
       )}
     >
