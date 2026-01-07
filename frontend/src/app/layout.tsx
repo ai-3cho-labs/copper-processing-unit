@@ -5,13 +5,13 @@ import './globals.css';
 export const metadata: Metadata = {
   title: '$COPPER - Mine Rewards by Holding',
   description:
-    'Earn mining rewards funded by trading fees. Hold tokens, build streaks, earn airdrops.',
-  keywords: ['solana', 'memecoin', 'mining', 'crypto', 'airdrop', 'defi'],
+    'Earn mining rewards funded by trading fees. Hold tokens, build streaks, get paid.',
+  keywords: ['solana', 'memecoin', 'mining', 'crypto', 'rewards', 'defi'],
   authors: [{ name: '$COPPER Team' }],
   openGraph: {
     title: '$COPPER - Mine Rewards by Holding',
     description:
-      'Earn mining rewards funded by trading fees. Hold tokens, build streaks, earn airdrops.',
+      'Earn mining rewards funded by trading fees. Hold tokens, build streaks, get paid.',
     type: 'website',
     locale: 'en_US',
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '$COPPER - Mine Rewards by Holding',
     description:
-      'Earn mining rewards funded by trading fees. Hold tokens, build streaks, earn airdrops.',
+      'Earn mining rewards funded by trading fees. Hold tokens, build streaks, get paid.',
   },
   robots: {
     index: true,
@@ -31,7 +31,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#B87333',
+  themeColor: '#0a0a0a',
 };
 
 export default function RootLayout({

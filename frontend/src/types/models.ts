@@ -48,11 +48,15 @@ export interface UserMiningStats {
 // Pool Models
 // ===========================================
 
-/** Distribution threshold in USD */
-export const DISTRIBUTION_THRESHOLD_USD = 250;
+/** Payout threshold in USD */
+export const PAYOUT_THRESHOLD_USD = 250;
 
-/** Max hours between distributions */
-export const DISTRIBUTION_MAX_HOURS = 24;
+/** Max hours between payouts */
+export const PAYOUT_MAX_HOURS = 24;
+
+// Legacy aliases for backwards compatibility
+export const DISTRIBUTION_THRESHOLD_USD = PAYOUT_THRESHOLD_USD;
+export const DISTRIBUTION_MAX_HOURS = PAYOUT_MAX_HOURS;
 
 /** Transformed pool information for UI */
 export interface PoolInfo {
@@ -62,9 +66,9 @@ export interface PoolInfo {
   balanceRaw: number;
   /** Current USD value */
   valueUsd: number;
-  /** Last distribution timestamp */
-  lastDistribution: Date | null;
-  /** Hours since last distribution */
+  /** Last payout timestamp */
+  lastPayout: Date | null;
+  /** Hours since last payout */
   hoursSinceLast: number | null;
   /** Hours until time trigger */
   hoursUntilTrigger: number | null;
@@ -134,8 +138,8 @@ export interface LeaderboardUser {
 // Transaction Models
 // ===========================================
 
-/** Buyback with formatted data */
-export interface FormattedBuyback {
+/** Reward activity with formatted data */
+export interface FormattedRewardActivity {
   /** Transaction signature */
   txSignature: string;
   /** SOL amount */
@@ -150,9 +154,9 @@ export interface FormattedBuyback {
   timeAgo: string;
 }
 
-/** Distribution with formatted data */
-export interface FormattedDistribution {
-  /** Distribution ID */
+/** Payout with formatted data */
+export interface FormattedPayout {
+  /** Payout ID */
   id: string;
   /** Pool amount */
   poolAmount: number;
@@ -169,3 +173,7 @@ export interface FormattedDistribution {
   /** Relative time */
   timeAgo: string;
 }
+
+// Legacy type aliases for backwards compatibility
+export type FormattedBuyback = FormattedRewardActivity;
+export type FormattedDistribution = FormattedPayout;

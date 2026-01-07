@@ -12,7 +12,7 @@ export default function DocsPage() {
         {/* Header */}
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-zinc-100 lg:font-mono">
-            <span className="hidden lg:inline text-copper-dim">&gt; </span>
+            <span className="hidden lg:inline text-gray-500">&gt; </span>
             DOCUMENTATION
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
@@ -35,8 +35,8 @@ export default function DocsPage() {
             <TOCLink href="#tiers" number="04">
               Tier System
             </TOCLink>
-            <TOCLink href="#distributions" number="05">
-              Distributions
+            <TOCLink href="#payouts" number="05">
+              Payouts
             </TOCLink>
             <TOCLink href="#faq" number="06">
               FAQ
@@ -52,9 +52,8 @@ export default function DocsPage() {
             in your wallet.
           </p>
           <p>
-            Trading volume generates creator fees on Pump.fun, which are used to
-            buy back $COPPER tokens and airdrop them to holders based on their
-            &quot;Hash Power&quot;.
+            Trading volume generates fees, which fund the reward pool. Rewards are
+            paid out to holders based on their &quot;Hash Power&quot;.
           </p>
           <Highlight>
             Hash Power = TWAB × Streak Multiplier
@@ -77,9 +76,9 @@ export default function DocsPage() {
               Average Balance (TWAB) multiplied by your tier bonus equals your mining power.
             </li>
             <li>
-              <strong className="text-zinc-200">Receive Distributions</strong> - When
-              the reward pool hits $250 or 24 hours pass, rewards are distributed
-              proportionally based on Hash Power.
+              <strong className="text-zinc-200">Receive Payouts</strong> - When
+              the reward pool hits $250 or 24 hours pass, mining rewards are paid
+              out proportionally based on Hash Power.
             </li>
           </ol>
         </Section>
@@ -89,7 +88,7 @@ export default function DocsPage() {
           <p>
             TWAB (Time-Weighted Average Balance) measures your average token holding
             over a period of time. It prevents gaming the system by buying right
-            before distributions.
+            before payouts.
           </p>
           <CodeBlock>
             {`TWAB = Σ(balance × time_held) / total_time
@@ -111,8 +110,8 @@ Example:
             higher reward multiplier:
           </p>
           <TierExplainer className="py-0" />
-          <div className="mt-4 p-4 bg-terminal-amber/10 border border-terminal-amber/30 rounded">
-            <p className="text-sm text-terminal-amber">
+          <div className="mt-4 p-4 bg-white/10 border border-white/30 rounded">
+            <p className="text-sm text-white">
               <strong>Warning:</strong> Selling tokens drops you down by one tier
               and resets your streak to that tier&apos;s minimum. Transfers to other
               wallets don&apos;t count as sells.
@@ -120,17 +119,17 @@ Example:
           </div>
         </Section>
 
-        {/* Distributions */}
-        <Section id="distributions" title="05. DISTRIBUTIONS">
-          <p>Distributions are triggered when either condition is met:</p>
+        {/* Payouts */}
+        <Section id="payouts" title="05. PAYOUTS">
+          <p>Mining rewards are paid out when either condition is met:</p>
           <ul className="space-y-2 list-disc list-inside">
             <li>
-              <strong className="text-terminal-green">Threshold:</strong> Pool
+              <strong className="text-white">Threshold:</strong> Pool
               value reaches $250 USD
             </li>
             <li>
-              <strong className="text-terminal-amber">Time:</strong> 24 hours
-              pass since the last distribution
+              <strong className="text-white">Time:</strong> 24 hours
+              pass since the last payout
             </li>
           </ul>
           <CodeBlock>
@@ -143,7 +142,7 @@ Example:
 - Your Reward: (5,000 / 100,000) × 100,000 = 5,000 $COPPER`}
           </CodeBlock>
           <p>
-            Rewards are automatically airdropped to your wallet and compound into
+            Rewards are automatically sent to your wallet and compound into
             your balance for future calculations.
           </p>
         </Section>
@@ -173,8 +172,8 @@ Example:
               and system wallets are excluded from rewards.
             </FAQ>
             <FAQ question="Where do the rewards come from?">
-              80% of Pump.fun creator fees are used for buybacks. The purchased
-              tokens go into the distribution pool. 20% goes to team operations.
+              80% of trading fees go directly into the reward pool. 20% goes to
+              team operations and development.
             </FAQ>
           </div>
         </Section>
@@ -198,10 +197,10 @@ function TOCLink({
       className={cn(
         'flex items-center gap-3 py-1.5 px-2 -mx-2 rounded',
         'hover:bg-zinc-800/50 transition-colors',
-        'text-zinc-300 hover:text-copper'
+        'text-zinc-300 hover:text-white'
       )}
     >
-      <span className="text-copper-dim font-mono text-xs">{number}</span>
+      <span className="text-gray-500 font-mono text-xs">{number}</span>
       <span>{children}</span>
     </a>
   );
@@ -227,7 +226,7 @@ function Section({
 
 function Highlight({ children }: { children: React.ReactNode }) {
   return (
-    <div className="p-4 bg-copper/10 border border-copper/30 rounded font-mono text-copper text-center">
+    <div className="p-4 bg-white/10 border border-white/30 rounded font-mono text-white text-center">
       {children}
     </div>
   );

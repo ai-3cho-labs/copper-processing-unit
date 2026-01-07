@@ -34,7 +34,7 @@ export default function LeaderboardPage() {
         {/* Header */}
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-zinc-100 lg:font-mono">
-            <span className="hidden lg:inline text-copper-dim">&gt; </span>
+            <span className="hidden lg:inline text-gray-500">&gt; </span>
             LEADERBOARD
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
@@ -45,7 +45,7 @@ export default function LeaderboardPage() {
         {/* Leaderboard Table */}
         <TerminalCard noPadding>
           {/* Desktop Header */}
-          <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 border-b border-terminal-border font-mono text-sm text-copper-dim">
+          <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 border-b border-terminal-border font-mono text-sm text-gray-500">
             <div className="col-span-1">RANK</div>
             <div className="col-span-5">MINER</div>
             <div className="col-span-2 text-center">TIER</div>
@@ -96,7 +96,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardUser }) {
       className={cn(
         'grid grid-cols-12 gap-4 px-4 py-3 items-center',
         'transition-colors hover:bg-zinc-800/30',
-        entry.isCurrentUser && 'bg-copper/10'
+        entry.isCurrentUser && 'bg-white/10'
       )}
     >
       {/* Rank */}
@@ -110,13 +110,13 @@ function LeaderboardRow({ entry }: { entry: LeaderboardUser }) {
           <span
             className={cn(
               'text-sm lg:font-mono',
-              entry.isCurrentUser ? 'text-copper font-medium' : 'text-zinc-300'
+              entry.isCurrentUser ? 'text-white font-medium' : 'text-zinc-300'
             )}
           >
             {entry.isCurrentUser ? 'You' : entry.walletShort}
           </span>
           {entry.isCurrentUser && (
-            <span className="text-xs text-copper-dim">(you)</span>
+            <span className="text-xs text-gray-500">(you)</span>
           )}
         </div>
       </div>
@@ -138,7 +138,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardUser }) {
         <span
           className={cn(
             'text-sm font-medium tabular-nums lg:font-mono',
-            entry.isCurrentUser ? 'text-terminal-green' : 'text-copper'
+            entry.isCurrentUser ? 'text-white glow-white' : 'text-white'
           )}
         >
           {formatCompactNumber(entry.hashPower)}

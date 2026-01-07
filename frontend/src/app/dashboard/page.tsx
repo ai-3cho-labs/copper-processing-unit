@@ -9,18 +9,18 @@ import {
   TierProgress,
   PendingRewards,
   MiniLeaderboard,
-  BuybackFeed,
-  DistributionHistory,
+  RewardActivity,
+  RewardHistory,
 } from '@/components/dashboard';
+import type { RewardHistoryItem } from '@/components/dashboard';
 import {
   useUserStats,
   usePoolStatus,
   useLeaderboard,
-  useBuybacks,
+  useRewardActivity,
   useUserHistory,
 } from '@/hooks/api';
-import type { DistributionHistoryItem as ApiDistributionHistoryItem } from '@/types/api';
-import type { DistributionHistoryItem } from '@/components/dashboard';
+import type { DistributionHistoryItem as ApiHistoryItem } from '@/types/api';
 import { formatTimeAgo } from '@/lib/utils';
 
 export default function DashboardPage() {
@@ -47,17 +47,17 @@ function DashboardContent() {
   const userStats = useUserStats(wallet);
   const pool = usePoolStatus();
   const leaderboard = useLeaderboard(5, wallet);
-  const buybacks = useBuybacks(5);
+  const activity = useRewardActivity(5);
   const history = useUserHistory(wallet, 5);
 
   // Transform history data to match component interface
-  const historyItems: DistributionHistoryItem[] | null = history.data
-    ? history.data.map((item: ApiDistributionHistoryItem) => ({
+  const historyItems: RewardHistoryItem[] | null = history.data
+    ? history.data.map((item: ApiHistoryItem) => ({
         id: item.distribution_id,
         amount: item.amount_received,
         hashPower: item.hash_power,
         sharePercent: 0, // Not provided by API, could calculate if needed
-        distributedAt: new Date(item.executed_at),
+        paidAt: new Date(item.executed_at),
         timeAgo: formatTimeAgo(item.executed_at),
         txSignature: item.tx_signature ?? undefined,
       }))
@@ -67,7 +67,7 @@ function DashboardContent() {
     <div className="space-y-4 lg:space-y-6">
       {/* Page Header */}
       <div className="hidden lg:block">
-        <h1 className="text-2xl text-copper">
+        <h1 className="text-2xl text-white">
           MINING DASHBOARD
         </h1>
         <p className="text-sm text-text-muted mt-1">
@@ -116,16 +116,16 @@ function DashboardContent() {
           isLoading={leaderboard.isLoading}
         />
 
-        {/* Buyback Feed - Right column */}
-        <BuybackFeed
-          buybacks={buybacks.data}
-          isLoading={buybacks.isLoading}
+        {/* Reward Activity - Right column */}
+        <RewardActivity
+          activity={activity.data}
+          isLoading={activity.isLoading}
           poolBalance={pool.data?.balance}
           poolValueUsd={pool.data?.valueUsd}
         />
 
-        {/* Distribution History - Full width */}
-        <DistributionHistory
+        {/* Reward History - Full width */}
+        <RewardHistory
           history={historyItems}
           isLoading={history.isLoading}
           className="lg:col-span-2"

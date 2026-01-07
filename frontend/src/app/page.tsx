@@ -2,7 +2,7 @@
 
 import { PageContainer } from '@/components/layout/PageContainer';
 import { Footer } from '@/components/layout/Footer';
-import { Hero, LiveStatsBar, HowItWorks, TierExplainer } from '@/components/landing';
+import { Hero, LiveStatsBar, HowItWorks, TierExplainer, WebGLBackground } from '@/components/landing';
 import { useGlobalStats, usePoolStatus } from '@/hooks/api';
 
 export default function HomePage() {
@@ -11,6 +11,9 @@ export default function HomePage() {
 
   return (
     <PageContainer showFooter={false}>
+      {/* WebGL Background (landing page only) */}
+      <WebGLBackground />
+
       {/* Hero Section */}
       <Hero
         stats={

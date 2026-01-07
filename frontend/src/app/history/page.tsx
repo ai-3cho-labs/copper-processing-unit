@@ -50,15 +50,15 @@ function HistoryContent() {
 
   // Calculate totals
   const totalReceived = data?.reduce((sum, item) => sum + item.amount_received, 0) ?? 0;
-  const distributionCount = data?.length ?? 0;
+  const payoutCount = data?.length ?? 0;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-zinc-100 lg:font-mono">
-          <span className="hidden lg:inline text-copper-dim">&gt; </span>
-          DISTRIBUTION HISTORY
+          <span className="hidden lg:inline text-gray-500">&gt; </span>
+          REWARD HISTORY
         </h1>
         <p className="text-sm text-zinc-500 mt-1">
           Your complete record of mining rewards
@@ -69,21 +69,21 @@ function HistoryContent() {
       <div className="grid grid-cols-2 gap-4">
         <TerminalCard>
           <div className="text-center">
-            <div className="text-xs text-zinc-500 mb-1 lg:font-mono lg:text-copper-dim">
+            <div className="text-xs text-zinc-500 mb-1 lg:font-mono lg:text-gray-500">
               TOTAL RECEIVED
             </div>
-            <div className="text-xl lg:text-2xl font-bold text-terminal-green lg:font-mono tabular-nums">
+            <div className="text-xl lg:text-2xl font-bold text-white glow-white lg:font-mono tabular-nums">
               {formatCOPPER(totalReceived, true)}
             </div>
           </div>
         </TerminalCard>
         <TerminalCard>
           <div className="text-center">
-            <div className="text-xs text-zinc-500 mb-1 lg:font-mono lg:text-copper-dim">
-              DISTRIBUTIONS
+            <div className="text-xs text-zinc-500 mb-1 lg:font-mono lg:text-gray-500">
+              PAYOUTS
             </div>
-            <div className="text-xl lg:text-2xl font-bold text-copper lg:font-mono tabular-nums">
-              {distributionCount}
+            <div className="text-xl lg:text-2xl font-bold text-white lg:font-mono tabular-nums">
+              {payoutCount}
             </div>
           </div>
         </TerminalCard>
@@ -92,7 +92,7 @@ function HistoryContent() {
       {/* History Table */}
       <TerminalCard title="TRANSACTION HISTORY" noPadding>
         {/* Desktop Header */}
-        <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 border-b border-terminal-border font-mono text-sm text-copper-dim">
+        <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 border-b border-terminal-border font-mono text-sm text-gray-500">
           <div className="col-span-3">DATE</div>
           <div className="col-span-3 text-right">AMOUNT</div>
           <div className="col-span-3 text-right">HASH POWER</div>
@@ -110,10 +110,10 @@ function HistoryContent() {
             data.map((item) => <HistoryRow key={item.distribution_id} item={item} />)
           ) : (
             <div className="px-4 py-12 text-center text-zinc-500">
-              <div className="text-2xl mb-2">📋</div>
-              <p>No distributions yet</p>
+              <div className="text-2xl mb-2">⛏️</div>
+              <p>No rewards yet</p>
               <p className="text-xs text-zinc-600 mt-1">
-                Hold tokens to receive distributions
+                Hold tokens to earn mining rewards
               </p>
             </div>
           )}
@@ -154,7 +154,7 @@ function HistoryRow({ item }: { item: DistributionHistoryItem }) {
 
       {/* Amount */}
       <div className="col-span-6 lg:col-span-3 text-right">
-        <span className="text-sm font-medium text-terminal-green lg:font-mono tabular-nums">
+        <span className="text-sm font-medium text-white glow-white lg:font-mono tabular-nums">
           +{formatCompactNumber(item.amount_received)}
         </span>
         <span className="text-xs text-zinc-500 ml-1">$COPPER</span>
@@ -174,7 +174,7 @@ function HistoryRow({ item }: { item: DistributionHistoryItem }) {
             href={solscanUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-copper hover:text-copper-glow transition-colors font-mono"
+            className="text-xs text-white hover:text-gray-300 transition-colors font-mono"
           >
             View TX ↗
           </a>
@@ -191,7 +191,7 @@ function HistoryRow({ item }: { item: DistributionHistoryItem }) {
             href={solscanUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-copper"
+            className="text-white"
           >
             View TX ↗
           </a>

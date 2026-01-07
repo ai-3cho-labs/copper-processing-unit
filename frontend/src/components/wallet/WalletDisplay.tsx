@@ -104,7 +104,7 @@ export function WalletDisplay({
           href={getAddressUrl(address)}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-500 hover:text-copper transition-colors"
+          className="text-zinc-500 hover:text-white transition-colors"
           aria-label="View on explorer"
         >
           <svg
