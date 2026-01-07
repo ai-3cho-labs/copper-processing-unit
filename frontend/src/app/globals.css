@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Local font imports */
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('/fonts/IBMPlexMono-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('/fonts/IBMPlexMono-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('/fonts/IBMPlexMono-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('/fonts/IBMPlexMono-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* CSS Variables - Pixel Art Palette */
+  :root {
+    /* Brand - Copper */
+    --copper: #b87333;
+    --copper-glow: #cd7f32;
+    --copper-dim: #7a5a2a;
+    --copper-light: #d4956b;
+
+    /* Backgrounds - Warm browns */
+    --bg-dark: #1a1410;
+    --bg-card: #241c16;
+    --bg-surface: #2e241c;
+
+    /* Pixel semantic colors */
+    --pixel-green: #6abe30;
+    --pixel-red: #ac3232;
+    --pixel-gold: #fbf236;
+    --pixel-blue: #5b6ee1;
+
+    /* Neutrals */
+    --border: #3d352d;
+    --text-primary: #f5f5f5;
+    --text-secondary: #a08060;
+    --text-muted: #6b5a4a;
+
+    /* Legacy aliases for migration */
+    --terminal-bg: #1a1410;
+    --terminal-card: #241c16;
+    --terminal-border: #3d352d;
+  }
+
+  /* Base HTML styles */
+  html {
+    @apply antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-bg-dark text-text-primary min-h-screen font-sans;
+    background: var(--bg-dark);
+  }
+
+  /* Desktop: Apply cave gradient background */
+  @screen lg {
+    body {
+      @apply bg-cave-gradient;
+    }
+  }
+
+  /* Mobile: Slightly darker gradient */
+  @media (max-width: 1023px) {
+    body {
+      @apply bg-mobile-gradient;
+    }
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-copper/30 text-white;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    @apply rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-copper-dim;
+  }
+}
+
+@layer components {
+  /* Cursor blink effect (kept for loading indicators) */
+  .cursor-blink::after {
+    content: '_';
+    @apply animate-blink text-copper ml-0.5;
+  }
+
+  /* Pixel card style */
+  .pixel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    @apply rounded-lg shadow-lg;
+  }
+
+  /* Pixel card with accent border */
+  .pixel-card-accent {
+    background: var(--bg-card);
+    border: 2px solid var(--copper-dim);
+    @apply rounded-lg shadow-copper-glow;
+  }
+
+  /* Copper text glow */
+  .text-copper-glow {
+    color: var(--copper);
+    text-shadow: 0 0 10px var(--copper-glow);
+  }
+
+  /* Pixel art rendering (crisp edges) */
+  .pixel-render {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* Pixel progress bar segment */
+  .pixel-segment {
+    @apply h-full transition-all duration-150;
+    background: var(--copper);
+  }
+
+  .pixel-segment-empty {
+    background: var(--bg-surface);
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Glow effects */
+  .glow-copper {
+    text-shadow: 0 0 10px var(--copper);
+  }
+
+  .glow-copper-strong {
+    text-shadow: 0 0 20px var(--copper-glow);
+  }
+
+  /* Transition presets */
+  .transition-smooth {
+    @apply transition-all duration-200 ease-in-out;
+  }
+}
+
+/* Wallet adapter UI overrides */
+.wallet-adapter-button {
+  @apply bg-copper hover:bg-copper-glow text-white rounded-lg !important;
+}
+
+.wallet-adapter-modal-wrapper {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  @apply rounded-xl !important;
+}
+
+.wallet-adapter-modal-title {
+  @apply text-copper !important;
+}
