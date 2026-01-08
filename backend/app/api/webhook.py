@@ -5,7 +5,6 @@ Handles incoming webhooks from Helius for sell detection.
 """
 
 import hmac
-import hashlib
 import logging
 from datetime import datetime, timezone
 from typing import Optional
@@ -32,52 +31,43 @@ class WebhookResponse(BaseModel):
     processed: int = 0
 
 
-def verify_webhook_signature(
-    payload: bytes,
-    signature: Optional[str],
+def verify_webhook_auth(
+    auth_header: Optional[str],
     secret: str
 ) -> bool:
     """
-    Verify Helius webhook signature.
+    Verify Helius webhook authorization.
+
+    Helius sends the authHeader value in the Authorization header.
 
     Args:
-        payload: Raw request body.
-        signature: Signature from header.
-        secret: Webhook secret.
+        auth_header: Authorization header value.
+        secret: Expected auth header value (HELIUS_WEBHOOK_SECRET).
 
     Returns:
-        True if signature is valid.
+        True if authorization is valid.
     """
-    if not signature or not secret:
+    if not auth_header or not secret:
         return False
 
-    expected = hmac.new(
-        secret.encode(),
-        payload,
-        hashlib.sha256
-    ).hexdigest()
-
-    return hmac.compare_digest(signature, expected)
+    return hmac.compare_digest(auth_header, secret)
 
 
 @router.post("/helius", response_model=WebhookResponse)
 async def helius_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    x_helius_signature: Optional[str] = Header(None, alias="x-helius-signature")
+    authorization: Optional[str] = Header(None)
 ):
     """
     Handle Helius webhook for transaction monitoring.
 
     Processes SWAP transactions to detect sells and update streaks.
 
-    SECURITY: Webhook signature verification is MANDATORY.
-    Configure HELIUS_WEBHOOK_SECRET in environment.
+    SECURITY: Webhook authorization verification is MANDATORY.
+    Configure HELIUS_WEBHOOK_SECRET in environment (must match Helius authHeader).
     """
-    # Get raw body for signature verification
-    body = await request.body()
-
-    # MANDATORY: Verify webhook signature
+    # MANDATORY: Verify webhook authorization
     # This prevents attackers from sending fake sell events
     if not settings.helius_webhook_secret:
         logger.error("HELIUS_WEBHOOK_SECRET not configured - rejecting webhook")
@@ -86,15 +76,14 @@ async def helius_webhook(
             detail="Webhook endpoint not configured. Set HELIUS_WEBHOOK_SECRET."
         )
 
-    if not verify_webhook_signature(
-        body,
-        x_helius_signature,
+    if not verify_webhook_auth(
+        authorization,
         settings.helius_webhook_secret
     ):
         logger.warning(
-            f"Invalid webhook signature from {request.client.host if request.client else 'unknown'}"
+            f"Invalid webhook authorization from {request.client.host if request.client else 'unknown'}"
         )
-        raise HTTPException(status_code=401, detail="Invalid signature")
+        raise HTTPException(status_code=401, detail="Invalid authorization")
 
     # Parse payload
     try:
