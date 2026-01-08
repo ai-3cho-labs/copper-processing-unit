@@ -31,7 +31,7 @@ const STEPS = [
  */
 export function HowItWorks({ className }: HowItWorksProps) {
   return (
-    <section id="how-it-works" className={cn('py-8 lg:py-12', className)}>
+    <section id="how-it-works" className={cn('py-10 lg:py-12', className)}>
       <div className="max-w-5xl mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-8">
@@ -44,7 +44,7 @@ export function HowItWorks({ className }: HowItWorksProps) {
         </div>
 
         {/* Steps Grid */}
-        <div className="grid md:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {STEPS.map((step) => (
             <StepCard key={step.title} step={step} />
           ))}
@@ -77,7 +77,7 @@ function StepCard({
   step: (typeof STEPS)[0];
 }) {
   return (
-    <Card className="p-4">
+    <Card className="p-3 sm:p-4">
       {/* Icon */}
       <div className="mb-3">
         <PixelIcon name={step.icon} size="lg" variant="default" />

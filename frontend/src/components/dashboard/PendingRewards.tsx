@@ -56,11 +56,11 @@ export function PendingRewards({
     <TerminalCard title="PENDING REWARDS" className={className}>
       <div className="space-y-4">
         {/* Pending Reward Amount */}
-        <div className="text-center py-2">
+        <div className="text-center py-4">
           <div className="text-xs text-zinc-500 mb-1 lg:font-mono lg:text-gray-500">
             YOUR ESTIMATED REWARD
           </div>
-          <div className="text-3xl lg:text-4xl font-bold text-white glow-white lg:font-mono tabular-nums">
+          <div className="text-3xl sm:text-4xl lg:text-4xl font-bold text-white glow-white lg:font-mono tabular-nums">
             +{formatCompactNumber(Math.floor(animatedReward))}
           </div>
           <div className="text-sm text-zinc-500 mt-1">$COPPER</div>

@@ -17,6 +17,9 @@ export {
 // Utility hooks
 export { useCountdown, useAnimatedNumber } from './useCountdown';
 
+// Gesture hooks
+export { useSwipeGesture, type SwipeGestureOptions, type SwipeGestureReturn } from './useSwipeGesture';
+
 // API hooks
 export {
   useGlobalStats,

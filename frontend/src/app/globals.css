@@ -184,6 +184,22 @@
   .transition-smooth {
     @apply transition-all duration-200 ease-in-out;
   }
+
+  /* iOS safe area padding - enhanced with minimum values */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Enhanced safe area with minimum padding for modal bottoms */
+  @supports (padding: max(0px)) {
+    .pb-safe {
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+    }
+  }
 }
 
 /* Wallet adapter UI overrides */

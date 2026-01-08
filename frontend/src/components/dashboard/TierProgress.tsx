@@ -166,7 +166,7 @@ function TierTimeline({ currentTier }: { currentTier: TierId }) {
               {index < tiers.length - 1 && (
                 <div
                   className={cn(
-                    'w-3 h-0.5 lg:w-4',
+                    'w-3 h-0.5 sm:w-4',
                     isPast ? 'bg-white/50' : 'bg-zinc-700'
                   )}
                 />

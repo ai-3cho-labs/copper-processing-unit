@@ -128,47 +128,50 @@ function LeaderboardRow({
   return (
     <div
       className={cn(
-        'grid grid-cols-12 gap-2 px-2 py-1.5 rounded items-center',
+        'px-2 py-2 rounded',
         'transition-colors',
         isCurrentUser
           ? 'bg-white/10 border border-white/20'
-          : 'hover:bg-zinc-800/50'
+          : 'active:bg-zinc-800/50 lg:hover:bg-zinc-800/50',
+        // Desktop: use grid layout
+        'lg:grid lg:grid-cols-12 lg:gap-2 lg:items-center lg:py-1.5'
       )}
     >
-      {/* Rank */}
-      <div className="col-span-2">
-        <RankBadge rank={entry.rank} size="sm" />
-      </div>
+      {/* Mobile: flex layout */}
+      <div className="flex items-center justify-between lg:contents">
+        {/* Left side: Rank + Wallet */}
+        <div className="flex items-center gap-3 min-w-0 lg:col-span-7 lg:grid lg:grid-cols-7 lg:gap-2">
+          <div className="lg:col-span-2">
+            <RankBadge rank={entry.rank} size="sm" />
+          </div>
+          <span
+            className={cn(
+              'text-sm truncate lg:col-span-5',
+              isCurrentUser ? 'text-white font-medium' : 'text-zinc-300'
+            )}
+          >
+            {isCurrentUser ? 'You' : entry.walletShort}
+          </span>
+        </div>
 
-      {/* Wallet */}
-      <div className="col-span-5 flex items-center gap-1.5 min-w-0">
-        <span
-          className={cn(
-            'text-sm truncate',
-            isCurrentUser ? 'text-white font-medium' : 'text-zinc-300'
-          )}
-        >
-          {isCurrentUser ? 'You' : entry.walletShort}
-        </span>
-      </div>
-
-      {/* Tier */}
-      <div className="col-span-2 flex justify-center">
-        <span className="text-lg" title={entry.tier.name}>
-          {entry.tier.emoji}
-        </span>
-      </div>
-
-      {/* Hash Power */}
-      <div className="col-span-3 text-right">
-        <span
-          className={cn(
-            'text-sm tabular-nums lg:font-mono',
-            isCurrentUser ? 'text-white glow-white' : 'text-zinc-400'
-          )}
-        >
-          {formatCompactNumber(entry.hashPower)}
-        </span>
+        {/* Right side: Tier + Hash Power */}
+        <div className="flex items-center gap-3 lg:col-span-5 lg:grid lg:grid-cols-5 lg:gap-2">
+          <div className="lg:col-span-2 lg:flex lg:justify-center">
+            <span className="text-lg" title={entry.tier.name}>
+              {entry.tier.emoji}
+            </span>
+          </div>
+          <div className="lg:col-span-3 lg:text-right">
+            <span
+              className={cn(
+                'text-sm tabular-nums lg:font-mono',
+                isCurrentUser ? 'text-white glow-white' : 'text-zinc-400'
+              )}
+            >
+              {formatCompactNumber(entry.hashPower)}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -195,18 +198,16 @@ function MiniLeaderboardSkeleton({
 
         {/* Row skeletons */}
         {Array.from({ length: limit }).map((_, i) => (
-          <div key={i} className="grid grid-cols-12 gap-2 px-2 py-1.5 items-center">
-            <div className="col-span-2">
-              <Skeleton className="h-5 w-8 rounded-full" />
-            </div>
-            <div className="col-span-5">
-              <Skeleton className="h-4 w-20" />
-            </div>
-            <div className="col-span-2 flex justify-center">
-              <Skeleton className="h-6 w-6 rounded-full" />
-            </div>
-            <div className="col-span-3 flex justify-end">
-              <Skeleton className="h-4 w-14" />
+          <div key={i} className="px-2 py-2 lg:grid lg:grid-cols-12 lg:gap-2 lg:items-center lg:py-1.5">
+            <div className="flex items-center justify-between lg:contents">
+              <div className="flex items-center gap-3 lg:col-span-7">
+                <Skeleton className="h-5 w-8 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="flex items-center gap-3 lg:col-span-5 lg:justify-end">
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-4 w-14" />
+              </div>
             </div>
           </div>
         ))}

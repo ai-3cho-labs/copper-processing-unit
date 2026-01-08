@@ -105,7 +105,7 @@ export function TierExplainer({ highlightTier, className }: TierExplainerProps) 
         </div>
 
         {/* Mobile: Card Stack */}
-        <div className="lg:hidden space-y-3">
+        <div className="lg:hidden space-y-2 sm:space-y-3">
           {tiers.map(([id, config]) => {
             const tierId = parseInt(id) as TierId;
             const isHighlighted = tierId === highlightTier;
@@ -115,14 +115,14 @@ export function TierExplainer({ highlightTier, className }: TierExplainerProps) 
               <div
                 key={id}
                 className={cn(
-                  'p-4 rounded-lg border transition-colors',
+                  'p-3 sm:p-4 rounded-lg border transition-colors',
                   isHighlighted
                     ? 'bg-white/10 border-white/30'
                     : 'bg-bg-card border-border'
                 )}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <span className="font-mono text-gray-400">[{config.name.toUpperCase().slice(0, 3)}]</span>
                     <div>
                       <div className="font-medium text-text-primary">

@@ -25,7 +25,7 @@ export function Hero({ stats, isLoading, className }: HeroProps) {
     <section className={cn('relative py-12 lg:py-20 overflow-hidden', className)}>
       <div className="relative max-w-4xl mx-auto text-center px-4">
         {/* Main Title - Animated entrance */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 animate-fade-slide-in">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-slide-in">
           <span className="text-text-primary">THE WORKING MAN&apos;S</span>
           <br />
           <span className="text-white glow-white">COPPER MINE</span>
@@ -63,7 +63,7 @@ export function Hero({ stats, isLoading, className }: HeroProps) {
 
         {/* Stats (optional) */}
         {stats && !isLoading && (
-          <div className="flex items-center justify-center gap-8 text-center animate-fade-slide-in [animation-delay:600ms]">
+          <div className="flex items-center justify-center gap-4 sm:gap-6 lg:gap-8 text-center animate-fade-slide-in [animation-delay:600ms]">
             <StatDisplay
               label="Miners"
               value={formatCompactNumber(stats.totalHolders)}
@@ -87,7 +87,7 @@ export function Hero({ stats, isLoading, className }: HeroProps) {
 function StatDisplay({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xl lg:text-2xl font-bold text-white tabular-nums">
+      <div className="text-lg sm:text-xl lg:text-2xl font-bold text-white tabular-nums">
         {value}
       </div>
       <div className="text-xs text-text-muted uppercase tracking-wider">{label}</div>

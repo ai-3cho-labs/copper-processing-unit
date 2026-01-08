@@ -97,6 +97,9 @@ const config: Config = {
         'count-up': 'countUp 0.6s ease-out both',
         // Shimmer for skeletons
         'shimmer': 'shimmer 1.5s infinite',
+        // Modal slide animations
+        'slide-up': 'slideUp 0.3s ease-out both',
+        'slide-down': 'slideDown 0.2s ease-in forwards',
       },
       keyframes: {
         blink: {
@@ -134,6 +137,18 @@ const config: Config = {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
         },
+        // Modal slide keyframes
+        slideUp: {
+          '0%': { transform: 'translateY(100%)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideDown: {
+          '0%': { transform: 'translateY(0)', opacity: '1' },
+          '100%': { transform: 'translateY(100%)', opacity: '0' },
+        },
+      },
+      screens: {
+        'xs': '375px',
       },
       boxShadow: {
         'white-glow': '0 0 10px rgba(255, 255, 255, 0.3)',

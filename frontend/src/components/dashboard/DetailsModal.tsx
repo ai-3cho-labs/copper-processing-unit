@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/cn';
 import { formatTimeAgo } from '@/lib/utils';
 import { useWalletAddress } from '@/hooks/useWallet';
+import { useSwipeGesture, useIsMobile, usePrefersReducedMotion } from '@/hooks';
 import {
   useUserStats,
   usePoolStatus,
@@ -34,11 +35,14 @@ const TABS: { id: TabId; label: string }[] = [
 /**
  * Full-screen modal with detailed mining stats.
  * Desktop: centered modal with terminal styling
- * Mobile: full-screen slide-up sheet
+ * Mobile: full-screen slide-up sheet with swipe-to-close
  */
 export function DetailsModal({ open, onClose }: DetailsModalProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [isClosing, setIsClosing] = useState(false);
   const wallet = useWalletAddress();
+  const isMobile = useIsMobile();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Fetch all data
   const { data: stats, isLoading: statsLoading } = useUserStats(wallet);
@@ -60,14 +64,49 @@ export function DetailsModal({ open, onClose }: DetailsModalProps) {
     }));
   }, [rawHistory]);
 
+  // Handle animated close
+  const handleClose = useCallback(() => {
+    if (prefersReducedMotion) {
+      onClose();
+      return;
+    }
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 200);
+  }, [onClose, prefersReducedMotion]);
+
+  // Swipe gesture for close
+  const tabIndex = TABS.findIndex((t) => t.id === activeTab);
+
+  const { handlers: swipeHandlers, dragOffset, isDragging } = useSwipeGesture({
+    onSwipeDown: handleClose,
+    onSwipeLeft: () => {
+      const nextTab = TABS[tabIndex + 1];
+      if (nextTab) {
+        setActiveTab(nextTab.id);
+      }
+    },
+    onSwipeRight: () => {
+      const prevTab = TABS[tabIndex - 1];
+      if (prevTab) {
+        setActiveTab(prevTab.id);
+      }
+    },
+    threshold: 80,
+    velocityThreshold: 0.5,
+    enabled: isMobile && open,
+  });
+
   // Handle escape key
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        handleClose();
       }
     },
-    [onClose]
+    [handleClose]
   );
 
   // Bind escape key and prevent body scroll
@@ -82,33 +121,63 @@ export function DetailsModal({ open, onClose }: DetailsModalProps) {
     };
   }, [open, handleKeyDown]);
 
+  // Reset closing state when modal opens
+  useEffect(() => {
+    if (open) {
+      setIsClosing(false);
+    }
+  }, [open]);
+
   if (!open) return null;
+
+  // Calculate transform for drag feedback
+  const dragTransform = isDragging && dragOffset.y > 0
+    ? `translateY(${dragOffset.y}px)`
+    : undefined;
 
   return (
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={onClose}
+        className={cn(
+          'absolute inset-0 bg-black/80 backdrop-blur-sm',
+          !prefersReducedMotion && 'transition-opacity duration-200',
+          isClosing && 'opacity-0'
+        )}
+        onClick={handleClose}
       />
 
       {/* Modal Content */}
       <div
         className={cn(
           'absolute bg-bg-dark border border-gray-800 overflow-hidden flex flex-col',
-          // Mobile: full-screen from bottom
-          'inset-x-0 bottom-0 top-16 rounded-t-2xl',
+          // Mobile: full-screen from bottom with safe area
+          'inset-x-0 bottom-0 top-12 xs:top-14 sm:top-16 rounded-t-2xl pb-safe',
           // Desktop: centered modal (reset mobile positioning)
           'lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2',
-          'lg:w-full lg:max-w-2xl lg:h-[80vh] lg:rounded-lg'
+          'lg:w-full lg:max-w-2xl lg:h-[80vh] lg:rounded-lg lg:pb-0',
+          // Animations
+          !prefersReducedMotion && !isDragging && [
+            isClosing ? 'animate-slide-down lg:animate-none lg:opacity-0' : 'animate-slide-up lg:animate-fade-in',
+          ]
         )}
+        style={{
+          transform: dragTransform,
+          transition: isDragging ? 'none' : undefined,
+        }}
+        {...swipeHandlers}
       >
+        {/* Drag Handle - Mobile only */}
+        <div className="lg:hidden flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-gray-600" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-          <h2 className="text-lg font-mono text-white">Mining Details</h2>
+        <div className="flex items-center justify-between px-4 py-2 lg:py-3 border-b border-gray-800">
+          <h2 className="text-base sm:text-lg font-mono text-white">Mining Details</h2>
           <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white transition-colors"
+            onClick={handleClose}
+            className="p-3 -mr-1.5 text-gray-400 hover:text-white active:scale-95 transition-all rounded-lg"
             aria-label="Close"
           >
             <svg
@@ -128,72 +197,78 @@ export function DetailsModal({ open, onClose }: DetailsModalProps) {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-800 px-2">
+        <div className="flex border-b border-gray-800">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'px-4 py-2 text-sm font-mono transition-colors relative',
+                'flex-1 py-3 text-sm font-mono transition-colors relative',
+                'min-h-[44px]', // Apple HIG minimum touch target
                 activeTab === tab.id
                   ? 'text-white'
-                  : 'text-gray-500 hover:text-gray-300'
+                  : 'text-gray-500 active:text-gray-300'
               )}
             >
-              {tab.label}
+              <span className="truncate">{tab.label}</span>
               {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
+                <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-white rounded-full" />
               )}
             </button>
           ))}
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {activeTab === 'overview' && (
-            <div className="space-y-4">
-              <MiningCard data={stats ?? null} isLoading={statsLoading} />
-              {stats && (
-                <TierProgress
-                  tier={stats.tier}
-                  nextTier={stats.nextTier}
-                  streakHours={stats.streakHours}
-                  progress={stats.progressToNextTier}
-                  hoursToNextTier={stats.hoursToNextTier}
-                  isLoading={statsLoading}
-                  showAllTiers
-                />
-              )}
-            </div>
-          )}
+        <div className="flex-1 overflow-y-auto p-3 xs:p-4">
+          <div
+            key={activeTab}
+            className={cn(!prefersReducedMotion && 'animate-fade-in')}
+          >
+            {activeTab === 'overview' && (
+              <div className="space-y-4">
+                <MiningCard data={stats ?? null} isLoading={statsLoading} />
+                {stats && (
+                  <TierProgress
+                    tier={stats.tier}
+                    nextTier={stats.nextTier}
+                    streakHours={stats.streakHours}
+                    progress={stats.progressToNextTier}
+                    hoursToNextTier={stats.hoursToNextTier}
+                    isLoading={statsLoading}
+                    showAllTiers
+                  />
+                )}
+              </div>
+            )}
 
-          {activeTab === 'leaderboard' && (
-            <MiniLeaderboard
-              entries={leaderboard ?? null}
-              userRank={stats?.rank}
-              userWallet={wallet}
-              isLoading={leaderboardLoading}
-              showViewAll={false}
-              limit={25}
-            />
-          )}
+            {activeTab === 'leaderboard' && (
+              <MiniLeaderboard
+                entries={leaderboard ?? null}
+                userRank={stats?.rank}
+                userWallet={wallet}
+                isLoading={leaderboardLoading}
+                showViewAll={false}
+                limit={25}
+              />
+            )}
 
-          {activeTab === 'history' && (
-            <RewardHistory
-              history={history ?? null}
-              isLoading={historyLoading}
-              showViewAll={false}
-              limit={20}
-            />
-          )}
+            {activeTab === 'history' && (
+              <RewardHistory
+                history={history ?? null}
+                isLoading={historyLoading}
+                showViewAll={false}
+                limit={20}
+              />
+            )}
 
-          {activeTab === 'pool' && (
-            <PendingRewards
-              pendingReward={stats?.pendingReward ?? 0}
-              pool={pool ?? null}
-              isLoading={poolLoading || statsLoading}
-            />
-          )}
+            {activeTab === 'pool' && (
+              <PendingRewards
+                pendingReward={stats?.pendingReward ?? 0}
+                pool={pool ?? null}
+                isLoading={poolLoading || statsLoading}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
