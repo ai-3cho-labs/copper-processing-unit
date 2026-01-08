@@ -5,8 +5,35 @@ FastAPI application entry point.
 """
 
 import logging
+import re
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+
+
+class SensitiveDataFilter(logging.Filter):
+    """Filter to mask sensitive data in log messages."""
+
+    # Pattern matches Base58 private keys (64 bytes = ~88 chars)
+    PRIVATE_KEY_PATTERN = re.compile(r'[1-9A-HJ-NP-Za-km-z]{60,90}')
+    # Pattern matches common secret-like values
+    SECRET_PATTERNS = [
+        re.compile(r'(private[_-]?key["\s:=]+)[^\s"\']+', re.IGNORECASE),
+        re.compile(r'(secret["\s:=]+)[^\s"\']+', re.IGNORECASE),
+    ]
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Mask sensitive data in log messages."""
+        if record.msg:
+            msg = str(record.msg)
+            # Mask long Base58-like strings that could be private keys
+            msg = self.PRIVATE_KEY_PATTERN.sub('[REDACTED_KEY]', msg)
+            # Mask explicit secret patterns
+            for pattern in self.SECRET_PATTERNS:
+                msg = pattern.sub(r'\1[REDACTED]', msg)
+            record.msg = msg
+        return True
+
+
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -16,17 +43,55 @@ from slowapi.errors import RateLimitExceeded
 from app.config import get_settings
 from app.database import init_db, close_db
 from app.utils.http_client import close_http_client
-from app.utils.rate_limiter import limiter
+from app.utils.rate_limiter import limiter, validate_rate_limiter_config
 from app.websocket import socket_app, setup_redis_adapter
 
-# Configure logging
+# Configure logging with sensitive data filter
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+# Add sensitive data filter to root logger
+for handler in logging.root.handlers:
+    handler.addFilter(SensitiveDataFilter())
 logger = logging.getLogger("copper")
+logger.addFilter(SensitiveDataFilter())
 
 settings = get_settings()
+
+# Initialize Sentry for error tracking (if configured)
+if settings.sentry_dsn:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+        from sentry_sdk.integrations.celery import CeleryIntegration
+        from sentry_sdk.integrations.logging import LoggingIntegration
+
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            environment=settings.environment,
+            traces_sample_rate=0.1 if settings.is_production else 1.0,
+            profiles_sample_rate=0.1 if settings.is_production else 1.0,
+            integrations=[
+                FastApiIntegration(transaction_style="endpoint"),
+                SqlalchemyIntegration(),
+                CeleryIntegration(),
+                LoggingIntegration(
+                    level=logging.INFO,
+                    event_level=logging.ERROR
+                ),
+            ],
+            send_default_pii=False,
+            attach_stacktrace=True,
+        )
+        logger.info("Sentry initialized successfully")
+    except ImportError:
+        logger.warning("Sentry SDK not installed, error tracking disabled")
+    except Exception as e:
+        logger.error(f"Failed to initialize Sentry: {e}")
+else:
+    logger.info("Sentry DSN not configured, error tracking disabled")
 
 
 @asynccontextmanager
@@ -34,6 +99,36 @@ async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     # Startup
     logger.info("$COPPER Backend initializing...")
+
+    # Validate configuration
+    if settings.is_production:
+        if not validate_rate_limiter_config():
+            logger.warning("Rate limiter configuration issues detected")
+        if not settings.sentry_dsn:
+            logger.warning("Sentry DSN not configured for production")
+        if not settings.helius_api_key:
+            logger.error("CRITICAL: Helius API key not configured")
+        if not settings.copper_token_mint:
+            logger.error("CRITICAL: Token mint not configured")
+
+        # Validate wallet private keys are configured (without logging values)
+        wallet_keys = [
+            ("CREATOR_WALLET", settings.creator_wallet_private_key),
+            ("BUYBACK_WALLET", settings.buyback_wallet_private_key),
+            ("AIRDROP_POOL", settings.airdrop_pool_private_key),
+        ]
+        for name, key in wallet_keys:
+            if not key:
+                logger.error(f"CRITICAL: {name}_PRIVATE_KEY not configured")
+            elif len(key) < 80 or len(key) > 90:
+                logger.error(f"CRITICAL: {name}_PRIVATE_KEY invalid length (expected ~88 chars)")
+            else:
+                logger.info(f"{name} private key configured (length: {len(key)})")
+
+        # Prevent test mode in production
+        if settings.test_mode:
+            logger.error("CRITICAL: TEST_MODE is enabled in production!")
+            raise ValueError("TEST_MODE cannot be enabled in production")
 
     if settings.database_url:
         await init_db()
@@ -44,6 +139,13 @@ async def lifespan(app: FastAPI):
     # Setup WebSocket Redis adapter
     await setup_redis_adapter()
     logger.info("WebSocket server initialized")
+
+    # Warm price cache at startup
+    try:
+        from app.utils.price_cache import warm_price_cache
+        await warm_price_cache()
+    except Exception as e:
+        logger.warning(f"Failed to warm price cache: {e}")
 
     logger.info("$COPPER Backend ready")
 
