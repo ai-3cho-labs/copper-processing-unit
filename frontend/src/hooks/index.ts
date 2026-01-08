@@ -30,3 +30,6 @@ export {
   useDistributions,
   useTiers,
 } from './api';
+
+// WebSocket hooks
+export { useWebSocket, type ConnectionStatus, type UseWebSocketReturn } from './useWebSocket';

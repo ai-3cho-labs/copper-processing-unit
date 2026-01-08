@@ -67,3 +67,7 @@ export type { EmptyStateProps } from './EmptyState';
 // Query State
 export { QueryState, QueryContent } from './QueryState';
 export type { QueryStateProps } from './QueryState';
+
+// Connection Indicator
+export { ConnectionIndicator } from './ConnectionIndicator';
+export type { ConnectionIndicatorProps } from './ConnectionIndicator';
