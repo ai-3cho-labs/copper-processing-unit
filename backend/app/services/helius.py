@@ -21,7 +21,7 @@ HELIUS_API_BASE = "https://api.helius.xyz/v0"
 
 def _get_rpc_url() -> str:
     """Get Helius RPC URL (computed at call time, not module load)."""
-    return f"https://mainnet.helius-rpc.com/?api-key={settings.helius_api_key}"
+    return settings.helius_rpc_url
 
 
 @dataclass

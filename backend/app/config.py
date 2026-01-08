@@ -15,6 +15,22 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "development"
     debug: bool = False
+    test_mode: bool = False  # Enable mock data for testing
+
+    # Test mode mock values (pool)
+    test_pool_balance: float = 500000.0  # Mock pool balance in tokens
+    test_pool_value_usd: float = 175.0  # Mock pool USD value
+    test_hours_since_distribution: float = 8.0  # Mock hours since last distribution
+
+    # Test mode mock values (user) - used when wallet has no real data
+    test_user_balance: float = 1000000.0  # Mock user balance in tokens
+    test_user_twab: float = 950000.0  # Mock TWAB
+    test_user_multiplier: float = 2.5  # Mock multiplier (Industrial tier)
+    test_user_hash_power: float = 2375000.0  # twab * multiplier
+    test_user_share_percent: float = 15.0  # Mock share of pool
+
+    # Solana Network (mainnet-beta or devnet)
+    solana_network: str = "mainnet-beta"
 
     # API
     api_host: str = "0.0.0.0"
@@ -33,7 +49,7 @@ class Settings(BaseSettings):
     helius_api_key: str = ""
     helius_webhook_secret: str = ""
 
-    # Solana RPC
+    # Solana RPC (override for custom RPC, otherwise uses Helius)
     solana_rpc_url: str = ""
 
     # Wallet Private Keys (Base58 encoded)
@@ -44,6 +60,7 @@ class Settings(BaseSettings):
 
     # Token
     copper_token_mint: str = ""
+    copper_token_decimals: int = 9  # Standard SPL token decimals
 
     # Celery
     celery_broker_url: str = ""
@@ -69,6 +86,30 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         """Check if running in production."""
         return self.environment == "production"
+
+    @property
+    def is_devnet(self) -> bool:
+        """Check if running on Solana devnet."""
+        return self.solana_network == "devnet"
+
+    @property
+    def helius_rpc_url(self) -> str:
+        """Get Helius RPC URL for current network."""
+        if self.solana_rpc_url:
+            return self.solana_rpc_url
+        network = "devnet" if self.is_devnet else "mainnet"
+        return f"https://{network}.helius-rpc.com/?api-key={self.helius_api_key}"
+
+    @property
+    def helius_api_url(self) -> str:
+        """Get Helius API URL for current network."""
+        network = "devnet" if self.is_devnet else "mainnet"
+        return f"https://api-{network}.helius-rpc.com/v0"
+
+    @property
+    def jupiter_api_url(self) -> str:
+        """Get Jupiter API URL (same for all networks)."""
+        return "https://quote-api.jup.ag/v6"
 
     class Config:
         env_file = ".env"
@@ -107,6 +148,7 @@ SOL_MINT = "So11111111111111111111111111111111111111112"
 USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 LAMPORTS_PER_SOL = 1_000_000_000
 
-# Token decimals (standard SPL token)
-COPPER_DECIMALS = 6
+# Token decimals - use settings value (can be overridden via COPPER_TOKEN_DECIMALS env var)
+# Standard SPL token = 9 decimals, but some tokens (like USDC) use 6
+COPPER_DECIMALS = get_settings().copper_token_decimals
 TOKEN_MULTIPLIER = 10 ** COPPER_DECIMALS

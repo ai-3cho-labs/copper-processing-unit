@@ -1,0 +1,86 @@
+# $COPPER Backend - Koyeb Deployment Configuration
+# Deploy via: koyeb app init copper-backend --config koyeb.yaml
+
+name: copper-backend
+services:
+  # FastAPI Backend Service
+  - name: api
+    git:
+      repository: github.com/YOUR_USERNAME/copper
+      branch: main
+      workdir: backend
+      dockerfile: Dockerfile
+    instance_types:
+      - type: nano
+    scaling:
+      min: 1
+      max: 2
+    ports:
+      - port: 8000
+        protocol: http
+    routes:
+      - path: /
+        port: 8000
+    health_checks:
+      - type: http
+        path: /api/health
+        port: 8000
+        interval_seconds: 30
+        timeout_seconds: 10
+    env:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        secret: database-url
+      - key: REDIS_URL
+        secret: redis-url
+      - key: HELIUS_API_KEY
+        secret: helius-api-key
+      - key: COPPER_TOKEN_MINT
+        secret: copper-token-mint
+      - key: CORS_ORIGINS
+        value: https://your-domain.pages.dev,https://copper.app
+
+  # Celery Worker Service
+  - name: worker
+    git:
+      repository: github.com/YOUR_USERNAME/copper
+      branch: main
+      workdir: backend
+      dockerfile: Dockerfile.worker
+    instance_types:
+      - type: nano
+    scaling:
+      min: 1
+      max: 1
+    env:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        secret: database-url
+      - key: REDIS_URL
+        secret: redis-url
+      - key: HELIUS_API_KEY
+        secret: helius-api-key
+      - key: COPPER_TOKEN_MINT
+        secret: copper-token-mint
+
+  # Celery Beat Scheduler (for periodic tasks)
+  - name: scheduler
+    git:
+      repository: github.com/YOUR_USERNAME/copper
+      branch: main
+      workdir: backend
+      dockerfile: Dockerfile.beat
+    instance_types:
+      - type: nano
+    scaling:
+      min: 1
+      max: 1
+    env:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        secret: database-url
+      - key: REDIS_URL
+        secret: redis-url

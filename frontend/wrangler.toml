@@ -1,0 +1,12 @@
+# $COPPER Frontend - Cloudflare Pages Configuration
+name = "copper-frontend"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Pages configuration
+pages_build_output_dir = ".vercel/output/static"
+
+[vars]
+# Public environment variables (set in Cloudflare Dashboard for secrets)
+# NEXT_PUBLIC_API_URL = "https://copper-api.koyeb.app"
+# NEXT_PUBLIC_WS_URL = "wss://copper-api.koyeb.app/ws"
