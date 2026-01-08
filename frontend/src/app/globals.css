@@ -143,6 +143,12 @@
     image-rendering: crisp-edges;
   }
 
+  /* Terminal-style text (VT323 for pixel aesthetic) */
+  .font-terminal {
+    font-family: 'VT323', monospace;
+    letter-spacing: 0.05em;
+  }
+
   /* Pixel progress bar segment */
   .pixel-segment {
     @apply h-full transition-all duration-150;

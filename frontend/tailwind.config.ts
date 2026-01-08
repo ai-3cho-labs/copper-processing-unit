@@ -73,6 +73,15 @@ const config: Config = {
       },
       fontSize: {
         xxs: ['0.625rem', { lineHeight: '0.875rem' }],
+        // Semantic typography scale
+        'display': ['3.5rem', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
+        'display-sm': ['2.5rem', { lineHeight: '1.15', letterSpacing: '-0.01em' }],
+        'heading-1': ['2rem', { lineHeight: '1.2' }],
+        'heading-2': ['1.5rem', { lineHeight: '1.3' }],
+        'heading-3': ['1.125rem', { lineHeight: '1.4' }],
+        'body': ['1rem', { lineHeight: '1.6' }],
+        'body-sm': ['0.875rem', { lineHeight: '1.5' }],
+        'caption': ['0.75rem', { lineHeight: '1.4' }],
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -82,7 +91,13 @@ const config: Config = {
         'coin-collect': 'coinCollect 0.8s ease-out forwards',
         // Pixel miner pickaxe animation (8 frames at 56px each = 448px total)
         'mine': 'mine 0.8s steps(8) infinite',
-        },
+        // Entrance animations (use 'both' to apply initial state during delay)
+        'fade-slide-in': 'fadeSlideIn 0.4s ease-out both',
+        'fade-in': 'fadeIn 0.5s ease-out both',
+        'count-up': 'countUp 0.6s ease-out both',
+        // Shimmer for skeletons
+        'shimmer': 'shimmer 1.5s infinite',
+      },
       keyframes: {
         blink: {
           '0%, 100%': { opacity: '1' },
@@ -102,7 +117,24 @@ const config: Config = {
           '0%': { backgroundPosition: '0 0' },
           '100%': { backgroundPosition: '-448px 0' },
         },
+        // Entrance animations
+        fadeSlideIn: {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        countUp: {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
       boxShadow: {
         'white-glow': '0 0 10px rgba(255, 255, 255, 0.3)',
         'white-strong': '0 0 20px rgba(255, 255, 255, 0.5)',

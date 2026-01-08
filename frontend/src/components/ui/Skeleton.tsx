@@ -16,7 +16,7 @@ export interface SkeletonProps {
 }
 
 /**
- * Skeleton loading placeholder
+ * Skeleton loading placeholder with shimmer effect
  */
 export function Skeleton({
   className,
@@ -28,7 +28,11 @@ export function Skeleton({
   return (
     <div
       className={cn(
-        'animate-pulse bg-terminal-border',
+        'relative overflow-hidden bg-white/[0.06]',
+        // Shimmer overlay
+        'before:absolute before:inset-0',
+        'before:bg-gradient-to-r before:from-transparent before:via-white/[0.08] before:to-transparent',
+        'before:animate-shimmer',
         rounded && 'rounded-md',
         circle && 'rounded-full',
         !rounded && !circle && 'rounded',

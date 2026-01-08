@@ -24,7 +24,6 @@ export {
   useUserHistory,
   useLeaderboard,
   usePoolStatus,
-  useBuybacks,
   useDistributions,
   useTiers,
 } from './api';

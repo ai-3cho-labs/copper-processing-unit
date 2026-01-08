@@ -19,7 +19,7 @@ function transformPoolStatus(data: PoolStatusResponse): PoolInfo {
     balance: data.balance,
     balanceRaw: data.balance_raw,
     valueUsd: data.value_usd,
-    lastDistribution: data.last_distribution
+    lastPayout: data.last_distribution
       ? new Date(data.last_distribution)
       : null,
     hoursSinceLast: data.hours_since_last,

@@ -97,7 +97,7 @@ export function PixelToast({
       <PixelIcon
         name={style.icon}
         size="md"
-        variant={variant === 'success' ? 'green' : variant === 'error' ? 'red' : 'blue'}
+        variant={variant === 'success' ? 'accent' : variant === 'error' ? 'default' : 'muted'}
       />
       <span className={cn('text-sm font-medium', style.text)}>
         {message}

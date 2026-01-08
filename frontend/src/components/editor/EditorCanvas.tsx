@@ -223,6 +223,7 @@ export function EditorCanvas({
     // Check objects in reverse order (top to bottom)
     for (let i = state.objects.length - 1; i >= 0; i--) {
       const obj = state.objects[i];
+      if (!obj) continue;
       const halfWidth = obj.sprite.spriteWidth / 2;
       const height = obj.sprite.spriteHeight;
 
