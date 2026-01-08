@@ -1,36 +1,40 @@
-Sprite sheets are awesome they allow an artist to condense all the animation information for a character or object into just one image I'm going to show you how we can take two Sprite sheets and create an awesome magic attack animation like this right here so in this video I'm going to show you how to convert those Sprite sheets into animated images then we're going to create objects out of them and finally we'll make a cool little attack animation just like you saw in our room let's Dive In
-
-so here in game maker I have just two Sprites this first one is the magic attack the second one is the character with all of the potential poses that they could have let's start with the magic attack animation as it's a little simpler I'm going to click on edit image and you can see this Sprite sheet has all of the animation laid out in rows and what we need to do is take that information and convert it to individual frames up here so then we can press play and view them animating game maker has a
-
-built-in tool for that under image at the top we can come over to convert to frames and this is going to take the Sprite sheet and with whatever settings we put into it we'll convert it to individual frames so this opens up a new window for us with that Sprite sheet in it I'm going to go ahead and bring this a little larger and then click on the center fit button and now we can see the Sprite sheet better so there are two main things we need to know which is how many there are in the Sprite sheet how
-
-many frames and what the size of each of these frames are wherever you get your Sprite sheet from read on there as oftentimes they'll tell you the exact size I know the image here is 100 by 100 for every frame so we can come down here and under frame width and height I can type in 100 and 100 and that takes this little box to be 100 by 100. now we have to figure out how many frames there are this is seven by seven so if I type in there are 49 frames altogether and there are seven frames per row it creates the
-
-grid that we need now if we look at the bottom here the last seven here and even this last one on the second to last row doesn't have any information in it so I'm going to subtract 8 from 49 which gives us 41. now the very first frame is also blank but we'll deal with that after we are converted to frames so I'm going to click on convert and it's asking us if we are sure we want to proceed because it's going to delete the original image which is okay because we're overwriting it I'm going
-
-to click yes and now you can see we have every single frame in its own image the first one here is blank so I'm going to click on it and click X and then we can press play and voila we've converted a Sprite sheet into an animated Sprite really cool now for the attack we're going to do this is going to face the other direction so I'm going to go ahead and come up here to image and I just need to rotate all frames counterclockwise by 90 degrees which is what that does right there we'll go ahead and rename this to spr
-
-magic attack I'll full size this right here and I'm going to want the origin to be right where it starts so I'm going to give it a custom origin right there and if we wanted to we could change the FPS but this I think looks really nice let's go to fumiko the next Sprite sheet we have so let's click on edit image so you can see that there's a whole lot more going on here this Sprite sheet contains all the animations for this character such as walking running dying dashing attacking and they're all put
-
-together right here but the process is still the exact same thing so we're going to go to image and convert to frames and I'm going to make this a little bit larger because we need to be able to see what we're converting and this is still kind of small so I'm going to hold Ctrl and zoom in with my middle Mouse wheel and this we can actually get a lot closer so the last settings we used are still the ones applied here so you can see this Frame width and height are still at 100. now
-
-this Sprite sheet uses a frame width of 24 and a frame height of 32. sometimes you have to just play around with these numbers until you find them where I got this from didn't tell me that I had to just plug in numbers until it looked right this can take a while and that's where these other settings can come in handy sometimes Sprite sheets can have offset in between every single image or some padding and that's where you can play around with these so if you had a little bit of separation
-
-between every single image you can change the horizontal and vertical separation if there was no Sprites for the First full column you can change that and if you had just a little bit off you can actually drag your rectangle around and that's this horizontal and vertical pixel offset I'm going to set these back to zero now I don't want 41 frames of this instead I need to find the animation I'm looking for so if I'm going to middle Mouse click and drag and I'm looking for this animation right
-
-here and it is one two three four five frames long this last one is for the top attack like looking up and that's not what we want so I only want five frames and at that point we don't really need to change the frames per row but we can and my grid is up here but I need this set of Animation so I'm going to just click and it brings it over here and then I'm just going to find exactly where it needs to be which is right there and when we're all happy with it we click convert click yes
-
-and here it is so we can press play but it's going to go really really fast because there's only five frames in here so I'm going to exit out of that bring this to Center fit and I'm going to change my origin to Middle Center I'm going to change the fps to 8 and then if we press play it's a much more reasonable speed I'm going to change this to spr and that's how you convert complex Sprite sheets into animated Sprites now let's create that cool animation I showed you in the beginning
-
-first we're going to need two objects so I'm going to click on objects and then I'm going to press this create asset objects dial it up to 2 and click create so object 1 is going to be obj player and object 2 will be obj spell I'm going to drag the Sprites to the appropriate objects and we just need to do a little bit of code and now in obj player I'm going to add a create event really quickly and I'm going to set image speed equal to zero that way our player isn't animating while they're standing still
-
-kind of gives her an idle animation then I'm going to create a key pressed event for the space bar in here I want to set the image speed back to 1 and I want to create the spell object that's going to fly so we're going to say instance create layer and it's going to be at X and Y for where we are on the instances layer and we're going to create the object spell now there's another event we can use that's really handy and it's under other and it's called animation end this event
-
-triggers when an animation is done playing so in this case we only want the player to trigger the animation one time when we press space and when we're done we'll set the image speed back to zero so they stop animating then in the obj spell I'm going to add a create event and in here we're going to set the speed of the object equal to 2. the direction is already facing to the right so by setting the speed it's going to fly to the right at 2 pixels per frame which is exactly what we're
-
-looking for lastly we're going to go into our room and we're going to place our obj player on the left hand side now this is a very small Sprite compared to the size of our room so what I'm going to do is just quickly set up a camera I'm going to click on room one go over to viewports and cameras and enable the viewports click on viewport 0 and enable this to be visible I'm going to change this to 240 by 136 for the camera size come down and I'm going to make it so the camera follows our player object
-
-and I'm going to set the horizontal border to be 320 in the vertical border to be 320. and if we press F5 we can now see the room and we can create the spell with our attack by pressing the space bar and that's how you can take just a couple Sprite sheets and create something really cool I hope you found that helpful and you learned something new if I missed anything important about Sprite sheets leave a comment below let me know and I would love to hear it thank you very much for joining me if
-
-you want to see more from me check out the links in the description below and as always keep making keep learning and I'll talk to you later foreign
-
+content-scripts.js:1 Content Script Bridge: Sending response back to page context: Object
+react-dom.development.js:38560 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+useStandardWalletAdapters.js:39 Phantom was registered as a Standard Wallet. The Wallet Adapter for Phantom can be removed from your app.
+eval @ useStandardWalletAdapters.js:39
+dashboard:1 Unchecked runtime.lastError: The message port closed before a response was received.
+favicon.ico:1  Failed to load resource: the server responded with a status of 404 (Not Found)
+useWebSocket.ts:220 [WebSocket] Connected
+dashboard:1 Access to fetch at 'http://localhost:8000/api/user/6tUC9nwboGMjTkjEB3CQg352Ki1YMJRGCowozyyVm9Tt/history?limit=20' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+:8000/api/user/6tUC9nwboGMjTkjEB3CQg352Ki1YMJRGCowozyyVm9Tt/history?limit=20:1  Failed to load resource: net::ERR_FAILED
+dashboard:1 Access to fetch at 'http://localhost:8000/api/user/6tUC9nwboGMjTkjEB3CQg352Ki1YMJRGCowozyyVm9Tt/history?limit=20' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.ts:94  GET http://localhost:8000/api/user/6tUC9nwboGMjTkjEB3CQg352Ki1YMJRGCowozyyVm9Tt/history?limit=20 net::ERR_FAILED 500 (Internal Server Error)
+get @ client.ts:94
+getUserHistory @ endpoints.ts:49
+queryFn @ useUserHistory.ts:19
+fetchFn @ query.js:225
+run @ retryer.js:88
+eval @ retryer.js:112
+dashboard:1 Access to fetch at 'http://localhost:8000/api/user/6tUC9nwboGMjTkjEB3CQg352Ki1YMJRGCowozyyVm9Tt/history?limit=20' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.ts:94  GET http://localhost:8000/api/user/6tUC9nwboGMjTkjEB3CQg352Ki1YMJRGCowozyyVm9Tt/history?limit=20 net::ERR_FAILED 500 (Internal Server Error)
+get @ client.ts:94
+getUserHistory @ endpoints.ts:49
+queryFn @ useUserHistory.ts:19
+fetchFn @ query.js:225
+run @ retryer.js:88
+eval @ retryer.js:112
+Promise.then
+eval @ retryer.js:108
+Promise.catch
+run @ retryer.js:92
+eval @ retryer.js:112
+dashboard:1 Access to fetch at 'http://localhost:8000/api/user/6tUC9nwboGMjTkjEB3CQg352Ki1YMJRGCowozyyVm9Tt/history?limit=20' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+client.ts:94  GET http://localhost:8000/api/user/6tUC9nwboGMjTkjEB3CQg352Ki1YMJRGCowozyyVm9Tt/history?limit=20 net::ERR_FAILED 500 (Internal Server Error)
+get @ client.ts:94
+getUserHistory @ endpoints.ts:49
+queryFn @ useUserHistory.ts:19
+fetchFn @ query.js:225
+run @ retryer.js:88
+eval @ retryer.js:112
+Promise.then
+eval @ retryer.js:108
