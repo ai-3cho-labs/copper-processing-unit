@@ -10,17 +10,12 @@ const nextConfig = {
     NEXT_PUBLIC_COPPER_TOKEN_MINT: process.env.NEXT_PUBLIC_COPPER_TOKEN_MINT,
   },
 
-  // Required for Cloudflare Pages deployment
-  output: process.env.CF_PAGES ? 'standalone' : undefined,
+  // Static export for Cloudflare Pages
+  output: 'export',
 
-  // Image optimization
+  // Image optimization - unoptimized for static export
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.helius-rpc.com',
-      },
-    ],
+    unoptimized: true,
   },
 
   // Webpack configuration for Solana wallet adapter
