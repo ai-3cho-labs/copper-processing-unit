@@ -36,6 +36,8 @@ export function EditorCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPainting, setIsPainting] = useState(false);
   const [lastPaintPos, setLastPaintPos] = useState<{ x: number; y: number } | null>(null);
+  const [isDraggingObject, setIsDraggingObject] = useState(false);
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const scaledTileSize = state.tileSize * zoom;
   const canvasWidth = state.width * scaledTileSize;
@@ -89,6 +91,9 @@ export function EditorCanvas({
           const spriteSheet = getSpriteSheet(cell.tile.spriteSheetId);
           if (!spriteSheet?.image) continue;
 
+          // Draw at actual sprite dimensions (scaled by zoom)
+          const drawWidth = cell.tile.spriteWidth * zoom;
+          const drawHeight = cell.tile.spriteHeight * zoom;
           ctx.drawImage(
             spriteSheet.image,
             cell.tile.spriteX,
@@ -97,13 +102,53 @@ export function EditorCanvas({
             cell.tile.spriteHeight,
             x * scaledTileSize,
             y * scaledTileSize,
-            scaledTileSize,
-            scaledTileSize
+            drawWidth,
+            drawHeight
           );
         }
       }
 
       ctx.globalAlpha = 1;
+    }
+
+    // Draw objects (sorted by zIndex)
+    const sortedObjects = [...state.objects].sort((a, b) => a.zIndex - b.zIndex);
+    for (const obj of sortedObjects) {
+      const spriteSheet = getSpriteSheet(obj.sprite.spriteSheetId);
+      if (!spriteSheet?.image) continue;
+
+      const drawWidth = obj.sprite.spriteWidth * zoom;
+      const drawHeight = obj.sprite.spriteHeight * zoom;
+      // Bottom-center anchor: x is center, y is bottom
+      const drawX = obj.x * zoom - drawWidth / 2;
+      const drawY = obj.y * zoom - drawHeight;
+
+      ctx.drawImage(
+        spriteSheet.image,
+        obj.sprite.spriteX,
+        obj.sprite.spriteY,
+        obj.sprite.spriteWidth,
+        obj.sprite.spriteHeight,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+      );
+
+      // Draw selection indicator for selected object
+      if (state.selectedObjectId === obj.id) {
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(drawX - 2, drawY - 2, drawWidth + 4, drawHeight + 4);
+        ctx.setLineDash([]);
+
+        // Draw anchor point
+        ctx.fillStyle = '#00ff00';
+        ctx.beginPath();
+        ctx.arc(obj.x * zoom, obj.y * zoom, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     // Draw selection
@@ -141,7 +186,7 @@ export function EditorCanvas({
       ctx.fillStyle = 'rgba(172, 50, 50, 0.1)';
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     }
-  }, [state, canvasWidth, canvasHeight, scaledTileSize, getSpriteSheet]);
+  }, [state, canvasWidth, canvasHeight, scaledTileSize, zoom, getSpriteSheet]);
 
   // Re-render when state or sprite sheets change
   useEffect(() => {
@@ -160,6 +205,39 @@ export function EditorCanvas({
     if (x < 0 || x >= state.width || y < 0 || y >= state.height) return null;
     return { x, y };
   }, [scaledTileSize, state.width, state.height]);
+
+  // Convert mouse position to pixel coordinates (for objects)
+  const getPixelCoords = useCallback((e: MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / zoom;
+    const y = (e.clientY - rect.top) / zoom;
+
+    return { x, y };
+  }, [zoom]);
+
+  // Find object at pixel position
+  const getObjectAtPosition = useCallback((px: number, py: number) => {
+    // Check objects in reverse order (top to bottom)
+    for (let i = state.objects.length - 1; i >= 0; i--) {
+      const obj = state.objects[i];
+      const halfWidth = obj.sprite.spriteWidth / 2;
+      const height = obj.sprite.spriteHeight;
+
+      // Object bounds (bottom-center anchor)
+      const left = obj.x - halfWidth;
+      const right = obj.x + halfWidth;
+      const top = obj.y - height;
+      const bottom = obj.y;
+
+      if (px >= left && px <= right && py >= top && py <= bottom) {
+        return obj;
+      }
+    }
+    return null;
+  }, [state.objects]);
 
   // Handle paint action
   const paint = useCallback((x: number, y: number) => {
@@ -195,6 +273,34 @@ export function EditorCanvas({
 
   // Mouse event handlers
   const handleMouseDown = useCallback((e: MouseEvent<HTMLCanvasElement>) => {
+    // Handle object tool
+    if (state.tool === 'object') {
+      const pixelCoords = getPixelCoords(e);
+      if (!pixelCoords) return;
+
+      // Check if clicking on an existing object
+      const clickedObject = getObjectAtPosition(pixelCoords.x, pixelCoords.y);
+
+      if (clickedObject) {
+        // Select and start dragging
+        dispatch({ type: 'SELECT_OBJECT', objectId: clickedObject.id });
+        setIsDraggingObject(true);
+        setDragOffset({
+          x: pixelCoords.x - clickedObject.x,
+          y: pixelCoords.y - clickedObject.y,
+        });
+      } else if (state.selectedTile) {
+        // Place new object at click position
+        dispatch({
+          type: 'ADD_OBJECT',
+          x: pixelCoords.x,
+          y: pixelCoords.y,
+          sprite: state.selectedTile,
+        });
+      }
+      return;
+    }
+
     const coords = getTileCoords(e);
     if (!coords) return;
 
@@ -209,9 +315,23 @@ export function EditorCanvas({
     } else if (state.tool === 'eyedropper') {
       eyedrop(coords.x, coords.y);
     }
-  }, [getTileCoords, state.tool, dispatch, paint, fill, eyedrop]);
+  }, [getTileCoords, getPixelCoords, getObjectAtPosition, state.tool, state.selectedTile, dispatch, paint, fill, eyedrop]);
 
   const handleMouseMove = useCallback((e: MouseEvent<HTMLCanvasElement>) => {
+    // Handle object dragging
+    if (isDraggingObject && state.selectedObjectId) {
+      const pixelCoords = getPixelCoords(e);
+      if (pixelCoords) {
+        dispatch({
+          type: 'MOVE_OBJECT',
+          objectId: state.selectedObjectId,
+          x: pixelCoords.x - dragOffset.x,
+          y: pixelCoords.y - dragOffset.y,
+        });
+      }
+      return;
+    }
+
     const coords = getTileCoords(e);
     if (!coords) return;
 
@@ -248,16 +368,18 @@ export function EditorCanvas({
       }
       setLastPaintPos(coords);
     }
-  }, [getTileCoords, state.tool, state.selection, isPainting, lastPaintPos, dispatch, paint]);
+  }, [getTileCoords, getPixelCoords, state.tool, state.selection, state.selectedObjectId, isPainting, isDraggingObject, dragOffset, lastPaintPos, dispatch, paint]);
 
   const handleMouseUp = useCallback(() => {
     setIsPainting(false);
     setLastPaintPos(null);
+    setIsDraggingObject(false);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     setIsPainting(false);
     setLastPaintPos(null);
+    setIsDraggingObject(false);
   }, []);
 
   return (

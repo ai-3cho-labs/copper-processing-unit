@@ -12,6 +12,7 @@ export interface ToolbarProps {
   canRedo: boolean;
   zoom: number;
   onZoomChange: (zoom: number) => void;
+  onSave: () => void;
   onExport: () => void;
   onExportJSON: () => void;
   onImportJSON: () => void;
@@ -20,10 +21,11 @@ export interface ToolbarProps {
 
 const TOOLS = [
   { id: 'select', label: 'Select', icon: '⬚', shortcut: 'V' },
-  { id: 'paint', label: 'Paint', icon: '🖌', shortcut: 'B' },
+  { id: 'paint', label: 'Paint Tile', icon: '🖌', shortcut: 'B' },
   { id: 'erase', label: 'Erase', icon: '⌫', shortcut: 'E' },
   { id: 'fill', label: 'Fill', icon: '🪣', shortcut: 'G' },
   { id: 'eyedropper', label: 'Eyedropper', icon: '💧', shortcut: 'I' },
+  { id: 'object', label: 'Place Object', icon: '📍', shortcut: 'O' },
 ] as const;
 
 /**
@@ -39,6 +41,7 @@ export function Toolbar({
   canRedo,
   zoom,
   onZoomChange,
+  onSave,
   onExport,
   onExportJSON,
   onImportJSON,
@@ -201,8 +204,15 @@ export function Toolbar({
       {/* Divider */}
       <div className="w-px h-6 bg-border" />
 
-      {/* Import/Export */}
+      {/* Save/Import/Export */}
       <div className="flex items-center gap-1">
+        <button
+          onClick={onSave}
+          className="px-3 py-1.5 text-xs bg-green-600 text-white hover:bg-green-500 rounded transition-colors font-medium"
+          title="Save to browser (Ctrl+S)"
+        >
+          Save
+        </button>
         <button
           onClick={onImportJSON}
           className="px-3 py-1.5 text-xs bg-bg-surface text-text-secondary hover:bg-bg-dark rounded transition-colors"
@@ -219,7 +229,7 @@ export function Toolbar({
         </button>
         <button
           onClick={onExport}
-          className="px-3 py-1.5 text-xs bg-copper text-bg-dark hover:bg-copper-glow rounded transition-colors font-medium"
+          className="px-3 py-1.5 text-xs bg-white text-bg-dark hover:bg-gray-200 rounded transition-colors font-medium"
           title="Export as PNG image"
         >
           Export PNG

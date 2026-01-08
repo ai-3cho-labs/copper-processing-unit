@@ -8,49 +8,82 @@ import { TilePalette } from './TilePalette';
 import { LayerPanel } from './LayerPanel';
 import { Toolbar } from './Toolbar';
 
+const STORAGE_KEY = 'copper-tilemap-editor';
+
 // Sprite sheet definitions for the Smallburg Mine Pack
 const SPRITE_SHEET_DEFINITIONS: Omit<SpriteSheet, 'image'>[] = [
+  // Cave tiles (16x16)
   {
     id: 'walls_floors',
     name: 'Walls & Floors',
-    src: '/assets/mining-bg/sprites/walls_floors.png',
+    src: '/sprites/walls_and_floors/walls_floors.png',
     tileWidth: 16,
     tileHeight: 16,
   },
   {
     id: 'mine_carts',
     name: 'Mine Carts',
-    src: '/assets/mining-bg/sprites/mine_carts.png',
+    src: '/sprites/decorations/mine_carts/mine_carts.png',
     tileWidth: 16,
     tileHeight: 16,
   },
   {
     id: 'wall_ores',
     name: 'Wall Ores',
-    src: '/assets/mining-bg/sprites/wall_ores.png',
+    src: '/sprites/decorations/mining/ores/wall_ores.png',
     tileWidth: 16,
     tileHeight: 16,
   },
   {
     id: 'walls_gems',
     name: 'Wall Gems',
-    src: '/assets/mining-bg/sprites/walls_gems.png',
+    src: '/sprites/decorations/mining/gems/walls_gems.png',
     tileWidth: 16,
     tileHeight: 16,
   },
   {
     id: 'mine_props',
     name: 'Props',
-    src: '/assets/mining-bg/sprites/mine_props.png',
+    src: '/sprites/decorations/props/mine_props.png',
     tileWidth: 16,
     tileHeight: 16,
   },
   {
     id: 'ladders',
     name: 'Ladders',
-    src: '/assets/mining-bg/sprites/ladders.png',
+    src: '/sprites/decorations/props/ladders.png',
     tileWidth: 16,
     tileHeight: 16,
+  },
+  // Character sprites (56x64)
+  {
+    id: 'miner_body',
+    name: 'Miner Body',
+    src: '/sprites/miner-body.png',
+    tileWidth: 56,
+    tileHeight: 64,
+  },
+  {
+    id: 'miner_overalls',
+    name: 'Miner Overalls',
+    src: '/sprites/miner-overalls.png',
+    tileWidth: 56,
+    tileHeight: 64,
+  },
+  {
+    id: 'miner_hair',
+    name: 'Miner Hair',
+    src: '/sprites/miner-hair.png',
+    tileWidth: 56,
+    tileHeight: 64,
+  },
+  // Ores (32x32 for large, variable for others)
+  {
+    id: 'ores',
+    name: 'Ores',
+    src: '/sprites/decorations/mining/ores/mining_ores_with_shadows.png',
+    tileWidth: 32,
+    tileHeight: 32,
   },
 ];
 
@@ -85,6 +118,53 @@ export function TilemapEditor({
     height,
     tileSize,
   });
+
+  // Load saved state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.version && data.layers) {
+          dispatch({
+            type: 'LOAD_STATE',
+            state: {
+              width: data.width,
+              height: data.height,
+              tileSize: data.tileSize,
+              layers: data.layers,
+              activeLayerId: data.layers[0]?.id,
+              objects: data.objects || [],
+              selectedObjectId: null,
+            },
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to load saved tilemap:', err);
+      }
+    }
+  }, [dispatch]);
+
+  // Save to localStorage
+  const handleSave = useCallback(() => {
+    const data = {
+      version: 2,
+      width: state.width,
+      height: state.height,
+      tileSize: state.tileSize,
+      layers: state.layers.map(layer => ({
+        id: layer.id,
+        name: layer.name,
+        visible: layer.visible,
+        locked: layer.locked,
+        opacity: layer.opacity,
+        cells: layer.cells,
+      })),
+      objects: state.objects,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    alert('Saved to browser storage!');
+  }, [state]);
 
   // Load sprite sheet images
   useEffect(() => {
@@ -141,6 +221,9 @@ export function TilemapEditor({
           case 'i':
             dispatch({ type: 'SET_TOOL', tool: 'eyedropper' });
             break;
+          case 'o':
+            dispatch({ type: 'SET_TOOL', tool: 'object' });
+            break;
           case 'escape':
             dispatch({ type: 'SET_SELECTION', selection: null });
             break;
@@ -167,6 +250,10 @@ export function TilemapEditor({
           case 'y':
             e.preventDefault();
             redo();
+            break;
+          case 's':
+            e.preventDefault();
+            handleSave();
             break;
           case 'c':
             if (state.selection) {
@@ -204,7 +291,7 @@ export function TilemapEditor({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [dispatch, undo, redo, state.selection, state.clipboard, state.width, state.height]);
+  }, [dispatch, undo, redo, handleSave, state.selection, state.clipboard, state.width, state.height]);
 
   // Export as PNG
   const handleExportPNG = useCallback(() => {
@@ -230,6 +317,7 @@ export function TilemapEditor({
           const spriteSheet = spriteSheets.find(s => s.id === cell.tile!.spriteSheetId);
           if (!spriteSheet?.image) continue;
 
+          // Draw at actual sprite dimensions
           ctx.drawImage(
             spriteSheet.image,
             cell.tile.spriteX,
@@ -238,13 +326,36 @@ export function TilemapEditor({
             cell.tile.spriteHeight,
             x * state.tileSize,
             y * state.tileSize,
-            state.tileSize,
-            state.tileSize
+            cell.tile.spriteWidth,
+            cell.tile.spriteHeight
           );
         }
       }
 
       ctx.globalAlpha = 1;
+    }
+
+    // Draw objects (sorted by zIndex)
+    const sortedObjects = [...state.objects].sort((a, b) => a.zIndex - b.zIndex);
+    for (const obj of sortedObjects) {
+      const spriteSheet = spriteSheets.find(s => s.id === obj.sprite.spriteSheetId);
+      if (!spriteSheet?.image) continue;
+
+      // Bottom-center anchor
+      const drawX = obj.x - obj.sprite.spriteWidth / 2;
+      const drawY = obj.y - obj.sprite.spriteHeight;
+
+      ctx.drawImage(
+        spriteSheet.image,
+        obj.sprite.spriteX,
+        obj.sprite.spriteY,
+        obj.sprite.spriteWidth,
+        obj.sprite.spriteHeight,
+        drawX,
+        drawY,
+        obj.sprite.spriteWidth,
+        obj.sprite.spriteHeight
+      );
     }
 
     // Download
@@ -257,7 +368,7 @@ export function TilemapEditor({
   // Export as JSON
   const handleExportJSON = useCallback(() => {
     const data = {
-      version: 1,
+      version: 2,
       width: state.width,
       height: state.height,
       tileSize: state.tileSize,
@@ -269,6 +380,7 @@ export function TilemapEditor({
         opacity: layer.opacity,
         cells: layer.cells,
       })),
+      objects: state.objects,
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -301,6 +413,8 @@ export function TilemapEditor({
               tileSize: data.tileSize,
               layers: data.layers,
               activeLayerId: data.layers[0]?.id,
+              objects: data.objects || [],
+              selectedObjectId: null,
             },
           });
         }
@@ -335,6 +449,7 @@ export function TilemapEditor({
         canRedo={canRedo}
         zoom={zoom}
         onZoomChange={setZoom}
+        onSave={handleSave}
         onExport={handleExportPNG}
         onExportJSON={handleExportJSON}
         onImportJSON={handleImportJSON}

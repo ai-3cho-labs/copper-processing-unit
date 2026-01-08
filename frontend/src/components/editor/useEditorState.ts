@@ -16,6 +16,15 @@ export interface LayerCell {
   tile: Tile | null;
 }
 
+// Object for free-placement (not grid-locked)
+export interface PlacedObject {
+  id: string;
+  sprite: Tile;
+  x: number;  // pixel position
+  y: number;  // pixel position (bottom-center anchor)
+  zIndex: number;
+}
+
 export interface Layer {
   id: string;
   name: string;
@@ -38,17 +47,21 @@ export interface EditorState {
   height: number;
   tileSize: number;
 
-  // Layers
+  // Tile Layers
   layers: Layer[];
   activeLayerId: string;
 
-  // Current tool
-  tool: 'select' | 'paint' | 'erase' | 'fill' | 'eyedropper';
+  // Objects (free-placed, not grid-locked)
+  objects: PlacedObject[];
+  selectedObjectId: string | null;
 
-  // Selected tile from palette
+  // Current tool
+  tool: 'select' | 'paint' | 'erase' | 'fill' | 'eyedropper' | 'object';
+
+  // Selected tile/sprite from palette
   selectedTile: Tile | null;
 
-  // Selection rectangle
+  // Selection rectangle (for tiles)
   selection: Selection | null;
 
   // Clipboard for copy/paste
@@ -78,7 +91,12 @@ type EditorAction =
   | { type: 'DELETE_SELECTION' }
   | { type: 'CLEAR_LAYER'; layerId: string }
   | { type: 'RESIZE_CANVAS'; width: number; height: number }
-  | { type: 'LOAD_STATE'; state: Partial<EditorState> };
+  | { type: 'LOAD_STATE'; state: Partial<EditorState> }
+  // Object actions
+  | { type: 'ADD_OBJECT'; x: number; y: number; sprite: Tile }
+  | { type: 'MOVE_OBJECT'; objectId: string; x: number; y: number }
+  | { type: 'DELETE_OBJECT'; objectId: string }
+  | { type: 'SELECT_OBJECT'; objectId: string | null };
 
 // ============================================================================
 // Helpers
@@ -405,6 +423,43 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
     case 'LOAD_STATE':
       return { ...state, ...action.state };
 
+    // Object actions
+    case 'ADD_OBJECT': {
+      const newObject: PlacedObject = {
+        id: `obj-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        sprite: action.sprite,
+        x: action.x,
+        y: action.y,
+        zIndex: state.objects.length,
+      };
+      return {
+        ...state,
+        objects: [...state.objects, newObject],
+        selectedObjectId: newObject.id,
+      };
+    }
+
+    case 'MOVE_OBJECT': {
+      const objects = state.objects.map(obj =>
+        obj.id === action.objectId
+          ? { ...obj, x: action.x, y: action.y }
+          : obj
+      );
+      return { ...state, objects };
+    }
+
+    case 'DELETE_OBJECT': {
+      const objects = state.objects.filter(obj => obj.id !== action.objectId);
+      return {
+        ...state,
+        objects,
+        selectedObjectId: state.selectedObjectId === action.objectId ? null : state.selectedObjectId,
+      };
+    }
+
+    case 'SELECT_OBJECT':
+      return { ...state, selectedObjectId: action.objectId };
+
     default:
       return state;
   }
@@ -432,13 +487,11 @@ export function useEditorState(options: UseEditorStateOptions = {}) {
     height,
     tileSize,
     layers: [
-      createEmptyLayer('layer-5', 'Far Background', width, height),
-      createEmptyLayer('layer-4', 'Mid Background', width, height),
-      createEmptyLayer('layer-3', 'Main Action', width, height),
-      createEmptyLayer('layer-2', 'Near Foreground', width, height),
-      createEmptyLayer('layer-1', 'Close Foreground', width, height),
+      createEmptyLayer('layer-1', 'Layer 1', width, height),
     ],
-    activeLayerId: 'layer-3',
+    activeLayerId: 'layer-1',
+    objects: [],
+    selectedObjectId: null,
     tool: 'paint',
     selectedTile: null,
     selection: null,
@@ -464,7 +517,7 @@ export function useEditorState(options: UseEditorStateOptions = {}) {
 
   // Wrapped dispatch that tracks history for undoable actions
   const dispatchWithHistory = useCallback((action: EditorAction) => {
-    const undoableActions = ['SET_TILE', 'SET_TILES', 'FILL_AREA', 'PASTE', 'DELETE_SELECTION', 'CLEAR_LAYER'];
+    const undoableActions = ['SET_TILE', 'SET_TILES', 'FILL_AREA', 'PASTE', 'DELETE_SELECTION', 'CLEAR_LAYER', 'ADD_OBJECT', 'MOVE_OBJECT', 'DELETE_OBJECT'];
 
     if (undoableActions.includes(action.type)) {
       pushHistory(state);
