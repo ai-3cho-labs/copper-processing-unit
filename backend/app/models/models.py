@@ -249,3 +249,27 @@ class SystemStats(Base):
     __table_args__ = (
         CheckConstraint("id = 1", name="single_row"),
     )
+
+
+class DistributionLock(Base):
+    """
+    Concurrency control for distribution execution.
+
+    Single-row table used with SELECT FOR UPDATE NOWAIT to prevent
+    race conditions where multiple Celery workers could execute
+    the same distribution twice.
+    """
+    __tablename__ = "distribution_lock"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    locked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    locked_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    __table_args__ = (
+        CheckConstraint("id = 1", name="distribution_lock_single_row"),
+    )

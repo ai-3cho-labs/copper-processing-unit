@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import CreatorReward, Buyback, SystemStats
 from app.config import get_settings, LAMPORTS_PER_SOL, SOL_MINT
 from app.utils.http_client import get_http_client
+from app.utils.solana_tx import sign_and_send_transaction, send_sol_transfer, confirm_transaction
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -160,6 +161,16 @@ class BuybackService:
         Returns:
             BuybackResult with transaction details.
         """
+        if not wallet_private_key:
+            return BuybackResult(
+                success=False,
+                tx_signature=None,
+                sol_spent=Decimal(0),
+                copper_received=0,
+                price_per_token=None,
+                error="Wallet private key not configured"
+            )
+
         lamports = int(sol_amount * LAMPORTS_PER_SOL)
 
         # Get quote
@@ -175,12 +186,17 @@ class BuybackService:
             )
 
         try:
-            # Get swap transaction
+            # Get the public key from private key for the swap
+            from app.utils.solana_tx import keypair_from_base58
+            keypair = keypair_from_base58(wallet_private_key)
+            user_public_key = str(keypair.pubkey())
+
+            # Get swap transaction from Jupiter
             swap_response = await self.client.post(
                 JUPITER_SWAP_API,
                 json={
                     "quoteResponse": quote,
-                    "userPublicKey": settings.team_wallet_public_key,  # Buyback wallet
+                    "userPublicKey": user_public_key,
                     "wrapAndUnwrapSol": True,
                     "dynamicComputeUnitLimit": True,
                     "prioritizationFeeLamports": "auto"
@@ -188,10 +204,6 @@ class BuybackService:
             )
             swap_response.raise_for_status()
             swap_data = swap_response.json()
-
-            # NOTE: Actual transaction signing and sending requires Solana SDK
-            # This is a placeholder for the transaction execution
-            # In production, use solders/solana-py to sign and send
 
             swap_tx = swap_data.get("swapTransaction")
             if not swap_tx:
@@ -201,33 +213,52 @@ class BuybackService:
                     sol_spent=Decimal(0),
                     copper_received=0,
                     price_per_token=None,
-                    error="No swap transaction returned"
+                    error="No swap transaction returned from Jupiter"
                 )
 
-            # For now, return the expected output from quote
+            # Sign and send the transaction
+            tx_result = await sign_and_send_transaction(
+                serialized_tx=swap_tx,
+                private_key=wallet_private_key,
+                skip_preflight=False
+            )
+
+            if not tx_result.success:
+                return BuybackResult(
+                    success=False,
+                    tx_signature=None,
+                    sol_spent=Decimal(0),
+                    copper_received=0,
+                    price_per_token=None,
+                    error=tx_result.error or "Transaction failed"
+                )
+
+            # Wait for confirmation
+            confirmed = await confirm_transaction(tx_result.signature, timeout_seconds=30)
+            if not confirmed:
+                logger.warning(f"Transaction sent but not confirmed: {tx_result.signature}")
+
+            # Calculate results from quote
             out_amount = int(quote.get("outAmount", 0))
             price_per_token = None
             if out_amount > 0:
                 price_per_token = sol_amount / Decimal(out_amount)
 
-            # TODO: Implement actual transaction signing and sending
-            # tx_signature = await self._send_transaction(swap_tx, wallet_private_key)
-
-            logger.warning(
-                "Swap execution placeholder - implement transaction signing"
+            logger.info(
+                f"Swap executed: {tx_result.signature}, "
+                f"{sol_amount} SOL → {out_amount} COPPER"
             )
 
             return BuybackResult(
-                success=False,
-                tx_signature=None,
+                success=True,
+                tx_signature=tx_result.signature,
                 sol_spent=sol_amount,
                 copper_received=out_amount,
-                price_per_token=price_per_token,
-                error="Transaction signing not implemented"
+                price_per_token=price_per_token
             )
 
         except Exception as e:
-            logger.error(f"Error executing swap: {e}")
+            logger.error(f"Error executing swap: {e}", exc_info=True)
             return BuybackResult(
                 success=False,
                 tx_signature=None,
@@ -372,11 +403,53 @@ class BuybackService:
             stats.updated_at = utc_now()
 
 
+async def transfer_to_team_wallet(
+    amount_sol: Decimal,
+    from_private_key: str,
+    to_address: str
+) -> Optional[str]:
+    """
+    Transfer SOL to team wallet (20% of creator rewards).
+
+    Args:
+        amount_sol: Amount of SOL to transfer.
+        from_private_key: Private key of source wallet.
+        to_address: Team wallet public address.
+
+    Returns:
+        Transaction signature if successful, None otherwise.
+    """
+    if not from_private_key or not to_address:
+        logger.error("Team wallet transfer: missing private key or address")
+        return None
+
+    if amount_sol <= 0:
+        logger.warning("Team wallet transfer: amount is zero or negative")
+        return None
+
+    lamports = int(amount_sol * LAMPORTS_PER_SOL)
+
+    result = await send_sol_transfer(
+        from_private_key=from_private_key,
+        to_address=to_address,
+        amount_lamports=lamports
+    )
+
+    if result.success:
+        logger.info(f"Team wallet transfer: {result.signature}, {amount_sol} SOL")
+        return result.signature
+    else:
+        logger.error(f"Team wallet transfer failed: {result.error}")
+        return None
+
+
 async def process_pending_rewards(db: AsyncSession) -> Optional[BuybackResult]:
     """
     Process all pending creator rewards.
 
     Main entry point for the buyback task.
+    - 80% goes to Jupiter swap (SOL → COPPER) for airdrop pool
+    - 20% goes to team wallet for operations
 
     Args:
         db: Database session.
@@ -405,10 +478,12 @@ async def process_pending_rewards(db: AsyncSession) -> Optional[BuybackResult]:
     # Execute buyback (80%)
     result = await service.execute_swap(
         split.buyback_sol,
-        settings.creator_wallet_private_key  # Using single wallet as per user
+        settings.creator_wallet_private_key
     )
 
-    if result.success and result.tx_signature:
+    buyback_success = result.success and result.tx_signature
+
+    if buyback_success:
         # Record buyback
         await service.record_buyback(
             result.tx_signature,
@@ -416,12 +491,29 @@ async def process_pending_rewards(db: AsyncSession) -> Optional[BuybackResult]:
             result.copper_received,
             result.price_per_token
         )
+        logger.info(f"Buyback recorded: {result.tx_signature}")
+    else:
+        logger.error(f"Buyback failed: {result.error}")
 
-        # Mark rewards as processed
+    # Transfer 20% to team wallet
+    team_tx = None
+    if settings.team_wallet_public_key and settings.creator_wallet_private_key:
+        team_tx = await transfer_to_team_wallet(
+            amount_sol=split.team_sol,
+            from_private_key=settings.creator_wallet_private_key,
+            to_address=settings.team_wallet_public_key
+        )
+        if team_tx:
+            logger.info(f"Team wallet transfer: {team_tx}")
+        else:
+            logger.warning("Team wallet transfer failed or skipped")
+    else:
+        logger.warning("Team wallet transfer skipped: missing configuration")
+
+    # Mark rewards as processed if at least one operation succeeded
+    if buyback_success or team_tx:
         reward_ids = [r.id for r in rewards]
         await service.mark_rewards_processed(reward_ids)
-
-    # TODO: Transfer 20% to team wallet
-    # This would be a separate SOL transfer
+        logger.info(f"Marked {len(reward_ids)} rewards as processed")
 
     return result

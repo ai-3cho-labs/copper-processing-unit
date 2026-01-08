@@ -10,6 +10,7 @@ from app.models.models import (
     Buyback,
     Distribution,
     DistributionRecipient,
+    DistributionLock,
     ExcludedWallet,
     SystemStats,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "Buyback",
     "Distribution",
     "DistributionRecipient",
+    "DistributionLock",
     "ExcludedWallet",
     "SystemStats",
 ]

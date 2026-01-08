@@ -11,24 +11,24 @@ from decimal import Decimal
 from typing import Optional
 from dataclasses import dataclass
 
-from sqlalchemy import select, func, insert
+from sqlalchemy import select, func, insert, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import OperationalError
 
 from app.models import (
-    Distribution, DistributionRecipient, SystemStats, ExcludedWallet
+    Distribution, DistributionRecipient, DistributionLock, SystemStats, ExcludedWallet
 )
 from app.services.twab import TWABService, HashPowerInfo
 from app.services.helius import get_helius_service
 from app.utils.http_client import get_http_client
+from app.utils.solana_tx import send_spl_token_transfer, confirm_transaction
+from app.utils.price_cache import get_copper_price_usd as get_cached_copper_price
 from app.config import get_settings, COPPER_DECIMALS, TOKEN_MULTIPLIER
 from app.websocket import emit_distribution_executed
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-
-# Price API (Jupiter for COPPER/USD via SOL)
-JUPITER_PRICE_API = "https://price.jup.ag/v4/price"
 
 
 def utc_now() -> datetime:
@@ -115,7 +115,7 @@ class DistributionService:
         """
         Get current COPPER price in USD.
 
-        Uses Jupiter price API via SOL price.
+        Uses cached price with fallback to multiple price feeds.
 
         Returns:
             Price per token in USD.
@@ -124,17 +124,9 @@ class DistributionService:
             return Decimal(0)
 
         try:
-            response = await self.client.get(
-                JUPITER_PRICE_API,
-                params={"ids": settings.copper_token_mint}
-            )
-            response.raise_for_status()
-            data = response.json()
-
-            price_data = data.get("data", {}).get(settings.copper_token_mint, {})
-            price = price_data.get("price", 0)
-
-            return Decimal(str(price))
+            # Use cached price with fallback support
+            price = await get_cached_copper_price(use_fallback=True)
+            return price
 
         except Exception as e:
             logger.error(f"Error fetching COPPER price: {e}")
@@ -336,6 +328,15 @@ class DistributionService:
             self.db.add(distribution)
             await self.db.flush()
 
+            # Execute token transfers and collect results
+            transfer_results = {}
+            if settings.airdrop_pool_private_key and settings.copper_token_mint:
+                transfer_results = await self._execute_token_transfers(plan.recipients)
+            else:
+                logger.warning(
+                    "Token transfers skipped: missing airdrop_pool_private_key or copper_token_mint"
+                )
+
             # BULK INSERT: Create all recipient records at once
             if plan.recipients:
                 recipient_data = [
@@ -346,7 +347,7 @@ class DistributionService:
                         "multiplier": Decimal(str(r.multiplier)),
                         "hash_power": r.hash_power,
                         "amount_received": r.amount,
-                        "tx_signature": None  # Set after actual transfer
+                        "tx_signature": transfer_results.get(r.wallet)
                     }
                     for r in plan.recipients
                 ]
@@ -357,9 +358,12 @@ class DistributionService:
 
             await self.db.commit()
 
+            # Count successful transfers
+            successful_transfers = sum(1 for v in transfer_results.values() if v)
             logger.info(
                 f"Distribution executed: id={distribution.id}, "
                 f"recipients={plan.recipient_count}, "
+                f"transfers_sent={successful_transfers}, "
                 f"pool={plan.pool_amount}"
             )
 
@@ -382,16 +386,91 @@ class DistributionService:
                 executed_at=distribution.executed_at,
             )
 
-            # TODO: Execute actual token transfers
-            # This would use ZK compression for efficient batch transfers
-            # For now, distribution is recorded but transfers are manual
-
             return distribution
 
         except Exception as e:
-            logger.error(f"Error executing distribution: {e}")
+            logger.error(f"Error executing distribution: {e}", exc_info=True)
             await self.db.rollback()
             return None
+
+    async def _execute_token_transfers(
+        self,
+        recipients: list[RecipientShare],
+        batch_size: int = 10
+    ) -> dict[str, Optional[str]]:
+        """
+        Execute token transfers to all recipients.
+
+        Processes transfers in batches to avoid rate limits.
+
+        Args:
+            recipients: List of recipients with wallet and amount.
+            batch_size: Number of concurrent transfers per batch.
+
+        Returns:
+            Dict mapping wallet addresses to transaction signatures (or None if failed).
+        """
+        import asyncio
+
+        results: dict[str, Optional[str]] = {}
+        token_mint = settings.copper_token_mint
+        private_key = settings.airdrop_pool_private_key
+
+        if not token_mint or not private_key:
+            logger.error("Cannot execute transfers: missing token_mint or private_key")
+            return results
+
+        async def transfer_to_recipient(recipient: RecipientShare) -> tuple[str, Optional[str]]:
+            """Transfer tokens to a single recipient."""
+            try:
+                result = await send_spl_token_transfer(
+                    from_private_key=private_key,
+                    to_address=recipient.wallet,
+                    token_mint=token_mint,
+                    amount=recipient.amount
+                )
+
+                if result.success:
+                    # Wait for confirmation (short timeout for batch processing)
+                    confirmed = await confirm_transaction(result.signature, timeout_seconds=15)
+                    if confirmed:
+                        logger.debug(f"Transfer confirmed: {recipient.wallet} -> {result.signature}")
+                        return (recipient.wallet, result.signature)
+                    else:
+                        logger.warning(f"Transfer sent but unconfirmed: {recipient.wallet}")
+                        return (recipient.wallet, result.signature)  # Still return signature
+                else:
+                    logger.error(f"Transfer failed to {recipient.wallet}: {result.error}")
+                    return (recipient.wallet, None)
+
+            except Exception as e:
+                logger.error(f"Transfer error to {recipient.wallet}: {e}")
+                return (recipient.wallet, None)
+
+        # Process in batches
+        for i in range(0, len(recipients), batch_size):
+            batch = recipients[i:i + batch_size]
+            logger.info(f"Processing transfer batch {i // batch_size + 1}, size={len(batch)}")
+
+            # Execute batch concurrently
+            tasks = [transfer_to_recipient(r) for r in batch]
+            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            for result in batch_results:
+                if isinstance(result, Exception):
+                    logger.error(f"Batch transfer exception: {result}")
+                elif isinstance(result, tuple):
+                    wallet, signature = result
+                    results[wallet] = signature
+
+            # Small delay between batches to avoid rate limits
+            if i + batch_size < len(recipients):
+                await asyncio.sleep(0.5)
+
+        successful = sum(1 for v in results.values() if v)
+        logger.info(f"Token transfers complete: {successful}/{len(recipients)} successful")
+
+        return results
 
     async def get_recent_distributions(
         self,
@@ -487,11 +566,58 @@ class DistributionService:
             stats.updated_at = utc_now()
 
 
+async def acquire_distribution_lock(db: AsyncSession, worker_id: str = "celery") -> bool:
+    """
+    Acquire exclusive lock for distribution execution.
+
+    Uses SELECT FOR UPDATE NOWAIT to prevent race conditions where
+    multiple Celery workers could execute the same distribution twice.
+
+    Args:
+        db: Database session.
+        worker_id: Identifier for the worker acquiring the lock.
+
+    Returns:
+        True if lock acquired, False if another worker holds it.
+    """
+    try:
+        # SELECT FOR UPDATE NOWAIT will raise an error if the row is already locked
+        result = await db.execute(
+            select(DistributionLock)
+            .where(DistributionLock.id == 1)
+            .with_for_update(nowait=True)
+        )
+        lock = result.scalar_one_or_none()
+
+        if lock is None:
+            # Lock row doesn't exist yet - create it
+            # This should only happen on first run before migration
+            lock = DistributionLock(id=1)
+            db.add(lock)
+
+        # Update lock metadata for debugging/monitoring
+        lock.locked_at = datetime.now(timezone.utc)
+        lock.locked_by = worker_id
+        await db.flush()
+
+        return True
+
+    except OperationalError as e:
+        # NOWAIT raises OperationalError if row is locked
+        # PostgreSQL error code 55P03 = lock_not_available
+        if "could not obtain lock" in str(e) or "55P03" in str(e):
+            logger.info(f"Distribution lock held by another worker, skipping")
+            return False
+        # Re-raise other operational errors
+        raise
+
+
 async def check_and_distribute(db: AsyncSession) -> Optional[Distribution]:
     """
     Check triggers and execute distribution if needed.
 
-    Main entry point for the distribution task.
+    Main entry point for the distribution task. Uses SELECT FOR UPDATE NOWAIT
+    to prevent race conditions where multiple workers could distribute twice.
 
     Args:
         db: Database session.
@@ -499,12 +625,24 @@ async def check_and_distribute(db: AsyncSession) -> Optional[Distribution]:
     Returns:
         Distribution record if executed, None otherwise.
     """
+    import socket
+    worker_id = f"celery@{socket.gethostname()}"
+
+    # Acquire exclusive lock to prevent double distribution
+    if not await acquire_distribution_lock(db, worker_id):
+        logger.info("Another worker is processing distribution, skipping")
+        return None
+
+    # Lock acquired - proceed with distribution check and execution
+    # The lock is held until the transaction commits or rolls back
     service = DistributionService(db)
 
     should, trigger = await service.should_distribute()
 
     if not should:
         logger.info("Distribution not triggered")
+        # Commit to release the lock cleanly
+        await db.commit()
         return None
 
     logger.info(f"Distribution triggered by: {trigger}")
@@ -512,6 +650,9 @@ async def check_and_distribute(db: AsyncSession) -> Optional[Distribution]:
     plan = await service.calculate_distribution()
     if not plan:
         logger.warning("Could not create distribution plan")
+        await db.commit()
         return None
 
+    # execute_distribution commits on success, rolls back on failure
+    # Either way, the lock is released
     return await service.execute_distribution(plan)
