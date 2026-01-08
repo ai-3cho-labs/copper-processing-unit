@@ -3,7 +3,7 @@
 import { cn } from '@/lib/cn';
 import { formatCompactNumber } from '@/lib/utils';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
-import { Card, Badge, PixelIcon } from '@/components/ui';
+import { Card, PixelIcon } from '@/components/ui';
 
 export interface HeroProps {
   /** Global stats for display */
@@ -25,23 +25,16 @@ export function Hero({ stats, isLoading, className }: HeroProps) {
   return (
     <section className={cn('relative py-12 lg:py-20 overflow-hidden', className)}>
       <div className="relative max-w-4xl mx-auto text-center px-4">
-        {/* Badge */}
-        <div className="mb-6">
-          <Badge variant="tier" size="lg">
-            [SIMULATED CRYPTO MINING]
-          </Badge>
-        </div>
-
         {/* Main Title */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
           <span className="text-text-primary">THE WORKING MAN&apos;S</span>
           <br />
-          <span className="text-white glow-white">$COPPER MINE</span>
+          <span className="text-white glow-white">$CPU MINE</span>
         </h1>
 
         {/* Tagline */}
         <p className="text-lg sm:text-xl text-text-secondary mb-8 max-w-2xl mx-auto">
-          Mine $COPPER without the machines. Hold tokens, earn mining rewards
+          Mine $CPU without the machines. Hold tokens, earn mining rewards
           from trading fees. The longer you hold, the more you mine.
         </p>
 
@@ -86,7 +79,7 @@ export function Hero({ stats, isLoading, className }: HeroProps) {
             <div className="w-px h-8 bg-border" />
             <StatDisplay
               label="Distributed"
-              value={`${formatCompactNumber(stats.totalDistributed)} $COPPER`}
+              value={`${formatCompactNumber(stats.totalDistributed)} $CPU`}
             />
           </div>
         )}

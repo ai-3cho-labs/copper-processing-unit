@@ -54,26 +54,22 @@ export function LiveStatsBar({
           <StatItem
             label="MINERS"
             value={formatCompactNumber(holders)}
-            icon="👷"
           />
           <Divider />
           <StatItem
             label="24H VOLUME"
             value={formatUSD(volume24h, true)}
-            icon="📊"
           />
           <Divider />
           <StatItem
             label="POOL"
             value={formatUSD(poolValueUsd)}
-            icon="💰"
             highlight={poolValueUsd >= 250}
           />
           <Divider />
           <StatItem
             label="NEXT DROP"
             value={countdown.formatted}
-            icon="⏰"
             highlight={countdown.isComplete}
           />
         </div>
@@ -105,27 +101,22 @@ export function LiveStatsBar({
 function StatItem({
   label,
   value,
-  icon,
   highlight = false,
 }: {
   label: string;
   value: string;
-  icon?: string;
   highlight?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      {icon && <span className="text-lg">{icon}</span>}
-      <div>
-        <div className="text-xs text-gray-500">{label}</div>
-        <div
-          className={cn(
-            'tabular-nums',
-            highlight ? 'text-white glow-white' : 'text-gray-200'
-          )}
-        >
-          {value}
-        </div>
+    <div>
+      <div className="text-xs text-gray-500">{label}</div>
+      <div
+        className={cn(
+          'tabular-nums',
+          highlight ? 'text-white glow-white' : 'text-gray-200'
+        )}
+      >
+        {value}
       </div>
     </div>
   );

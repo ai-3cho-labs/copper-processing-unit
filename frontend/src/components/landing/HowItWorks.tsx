@@ -12,26 +12,20 @@ const STEPS = [
   {
     number: '01',
     icon: 'chest' as const,
-    title: 'Hold $COPPER',
-    description:
-      'Buy and hold $COPPER tokens. Your time-weighted average balance (TWAB) determines your mining power.',
-    highlight: 'No staking required',
+    title: 'Hold $CPU',
+    description: 'Buy and hold tokens. Your TWAB determines mining power.',
   },
   {
     number: '02',
     icon: 'lightning' as const,
     title: 'Earn Hash Power',
-    description:
-      'Build your streak by holding without selling. Longer streaks unlock higher multipliers up to 5x.',
-    highlight: 'Up to 5x multiplier',
+    description: 'Hold without selling. Longer streaks unlock up to 5x multiplier.',
   },
   {
     number: '03',
     icon: 'coin' as const,
     title: 'Receive Rewards',
-    description:
-      'Trading fees fill the reward pool. When it hits $250 or 24h passes, mining rewards are paid out.',
-    highlight: 'Automatic payouts',
+    description: 'Trading fees fill the pool. Rewards paid when pool hits $250 or 24h.',
   },
 ];
 
@@ -40,29 +34,28 @@ const STEPS = [
  */
 export function HowItWorks({ className }: HowItWorksProps) {
   return (
-    <section id="how-it-works" className={cn('py-12 lg:py-20', className)}>
-      <div className="max-w-6xl mx-auto px-4">
+    <section id="how-it-works" className={cn('py-8 lg:py-12', className)}>
+      <div className="max-w-5xl mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-2xl lg:text-3xl font-bold text-text-primary mb-4">
+        <div className="text-center mb-8">
+          <h2 className="text-xl lg:text-2xl font-bold text-text-primary mb-2">
             HOW IT WORKS
           </h2>
-          <p className="text-text-secondary max-w-lg mx-auto">
-            Simulated mining rewards without hardware. Your tokens work for you
-            24/7.
+          <p className="text-sm text-text-secondary max-w-md mx-auto">
+            Mining rewards without hardware. Your tokens work for you 24/7.
           </p>
         </div>
 
         {/* Steps Grid */}
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          {STEPS.map((step, index) => (
-            <StepCard key={step.number} step={step} index={index} />
+        <div className="grid md:grid-cols-3 gap-4 lg:gap-6">
+          {STEPS.map((step) => (
+            <StepCard key={step.number} step={step} />
           ))}
         </div>
 
         {/* Connection lines - Desktop only */}
-        <div className="hidden lg:flex justify-center mt-8">
-          <div className="flex items-center gap-4 text-gray-500 text-sm font-mono">
+        <div className="hidden lg:flex justify-center mt-6">
+          <div className="flex items-center gap-3 text-gray-500 text-xs font-mono">
             <span>HOLD</span>
             <span className="text-white">→</span>
             <span>EARN</span>
@@ -79,52 +72,39 @@ export function HowItWorks({ className }: HowItWorksProps) {
 
 /**
  * Individual step card
- * Monochrome design
+ * Compact monochrome design
  */
 function StepCard({
   step,
 }: {
   step: (typeof STEPS)[0];
-  index: number;
 }) {
   return (
-    <Card className="relative">
+    <Card className="relative p-4">
       {/* Step number badge */}
       <div
         className={cn(
-          'absolute -top-3 left-4',
-          'px-2 py-0.5 text-xs font-bold rounded',
+          'absolute -top-2 left-3',
+          'px-1.5 py-0.5 text-xs font-bold rounded',
           'bg-white text-bg-dark'
         )}
       >
         {step.number}
       </div>
 
-      <div className="pt-4">
+      <div className="pt-2">
         {/* Icon */}
-        <div className="mb-4">
-          <PixelIcon name={step.icon} size="xl" variant="default" />
+        <div className="mb-2">
+          <PixelIcon name={step.icon} size="lg" variant="default" />
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-semibold text-text-primary mb-2">
+        <h3 className="text-base font-semibold text-text-primary mb-1">
           {step.title}
         </h3>
 
         {/* Description */}
-        <p className="text-sm text-text-secondary mb-4">{step.description}</p>
-
-        {/* Highlight */}
-        <div
-          className={cn(
-            'inline-flex items-center gap-1.5',
-            'px-2 py-1 rounded text-xs',
-            'bg-white/10 text-white'
-          )}
-        >
-          <PixelIcon name="star" size="sm" variant="accent" />
-          <span>{step.highlight}</span>
-        </div>
+        <p className="text-xs text-text-secondary">{step.description}</p>
       </div>
     </Card>
   );

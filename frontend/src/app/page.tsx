@@ -1,8 +1,7 @@
 'use client';
 
 import { PageContainer } from '@/components/layout/PageContainer';
-import { Footer } from '@/components/layout/Footer';
-import { Hero, LiveStatsBar, HowItWorks, TierExplainer, WebGLBackground } from '@/components/landing';
+import { Hero, LiveStatsBar, HowItWorks, WebGLBackground } from '@/components/landing';
 import { useGlobalStats, usePoolStatus } from '@/hooks/api';
 
 export default function HomePage() {
@@ -10,7 +9,7 @@ export default function HomePage() {
   const poolStatus = usePoolStatus();
 
   return (
-    <PageContainer showFooter={false}>
+    <PageContainer>
       {/* WebGL Background (landing page only) */}
       <WebGLBackground />
 
@@ -38,12 +37,6 @@ export default function HomePage() {
 
       {/* How It Works */}
       <HowItWorks />
-
-      {/* Tier Explainer */}
-      <TierExplainer />
-
-      {/* Footer */}
-      <Footer />
     </PageContainer>
   );
 }
