@@ -6,6 +6,7 @@ import { useWallet } from '@/hooks/useWallet';
 import { LoadingPage } from '@/components/ui/LoadingSpinner';
 import { TerminalCard } from '@/components/ui/TerminalCard';
 import { ConnectButton } from './ConnectButton';
+import { isValidRedirectPath } from '@/lib/validators';
 
 export interface WalletGuardProps {
   /** Children to render when wallet is connected */
@@ -33,7 +34,7 @@ export function WalletGuard({
 
   // Handle redirect when not connected
   useEffect(() => {
-    if (!connecting && !connected && redirectTo) {
+    if (!connecting && !connected && redirectTo && isValidRedirectPath(redirectTo)) {
       router.push(redirectTo);
     }
   }, [connected, connecting, redirectTo, router]);

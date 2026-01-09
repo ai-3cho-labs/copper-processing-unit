@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { cn } from '@/lib/cn';
+import { validateTilemapData } from '@/lib/validators';
 import { useEditorState } from './useEditorState';
 import { EditorCanvas, SpriteSheet } from './EditorCanvas';
 import { TilePalette } from './TilePalette';
@@ -125,7 +126,7 @@ export function TilemapEditor({
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        if (data.version && data.layers) {
+        if (validateTilemapData(data)) {
           dispatch({
             type: 'LOAD_STATE',
             state: {
@@ -163,7 +164,6 @@ export function TilemapEditor({
       objects: state.objects,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    alert('Saved to browser storage!');
   }, [state]);
 
   // Load sprite sheet images
@@ -404,7 +404,7 @@ export function TilemapEditor({
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        if (data.version && data.layers) {
+        if (validateTilemapData(data)) {
           dispatch({
             type: 'LOAD_STATE',
             state: {
@@ -417,10 +417,11 @@ export function TilemapEditor({
               selectedObjectId: null,
             },
           });
+        } else {
+          console.error('Invalid tilemap file structure');
         }
       } catch (err) {
         console.error('Failed to parse tilemap JSON:', err);
-        alert('Failed to parse tilemap file');
       }
     };
     reader.readAsText(file);

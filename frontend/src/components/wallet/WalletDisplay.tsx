@@ -3,6 +3,7 @@
 import { useWallet } from '@/hooks/useWallet';
 import { cn } from '@/lib/cn';
 import { getAddressUrl } from '@/lib/constants';
+import { isValidWalletIconUrl } from '@/lib/validators';
 
 export interface WalletDisplayProps {
   /** Show wallet icon */
@@ -64,7 +65,7 @@ export function WalletDisplay({
       )}
     >
       {/* Wallet icon */}
-      {showIcon && walletIcon && (
+      {showIcon && walletIcon && isValidWalletIconUrl(walletIcon) && (
         <img
           src={walletIcon}
           alt={walletName || 'Wallet'}

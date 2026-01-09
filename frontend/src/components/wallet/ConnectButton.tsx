@@ -4,6 +4,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@/hooks/useWallet';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
+import { isValidWalletIconUrl } from '@/lib/validators';
 
 export interface ConnectButtonProps {
   /** Button size */
@@ -56,7 +57,7 @@ export function ConnectButton({
           className={cn('flex-1', className)}
           onClick={() => setVisible(true)}
         >
-          {showIcon && walletIcon && (
+          {showIcon && walletIcon && isValidWalletIconUrl(walletIcon) && (
             <img
               src={walletIcon}
               alt=""
