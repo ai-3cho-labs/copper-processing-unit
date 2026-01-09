@@ -52,12 +52,26 @@ def _get_storage_uri() -> str | None:
 
 
 def _create_limiter() -> Limiter:
-    """Create and configure the rate limiter instance."""
+    """
+    Create and configure the rate limiter instance.
+
+    SECURITY: In production, Redis is REQUIRED for proper rate limiting.
+    Without Redis, rate limits don't work across workers and attackers
+    can bypass limits by hitting different workers.
+    """
     try:
         storage_uri = _get_storage_uri()
     except ValueError as e:
-        # Log but don't crash in case we want to allow startup for debugging
-        logger.critical(str(e))
+        # SECURITY: Fail hard in production - do not allow startup without Redis
+        # This prevents running production with ineffective rate limiting
+        if settings.is_production:
+            logger.critical(f"FATAL: {e}")
+            raise RuntimeError(
+                "Cannot start in production without Redis for rate limiting. "
+                "Set REDIS_URL environment variable."
+            )
+        # In development, log warning but continue with in-memory storage
+        logger.warning(str(e))
         storage_uri = None
 
     return Limiter(

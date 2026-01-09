@@ -29,8 +29,11 @@ router = APIRouter(prefix="/api/webhook", tags=["webhook"])
 # Solana wallet address validation: 32-44 base58 characters
 WALLET_REGEX = re.compile(r'^[1-9A-HJ-NP-Za-km-z]{32,44}$')
 
-# Maximum age for webhook timestamps (5 minutes) to prevent replay attacks
-WEBHOOK_MAX_AGE_SECONDS = 300
+# Maximum age for webhook timestamps to prevent replay attacks
+# Production: 5 minutes (strict)
+# Development: 30 minutes (more lenient for testing)
+WEBHOOK_MAX_AGE_SECONDS_PRODUCTION = 300
+WEBHOOK_MAX_AGE_SECONDS_DEVELOPMENT = 1800
 
 
 class WebhookResponse(BaseModel):
@@ -62,32 +65,33 @@ def verify_webhook_auth(
     return hmac.compare_digest(auth_header, secret)
 
 
-def validate_webhook_timestamp(timestamp: Optional[int], require_timestamp: bool = True) -> bool:
+def validate_webhook_timestamp(timestamp: Optional[int]) -> bool:
     """
     Validate webhook timestamp to prevent replay attacks.
 
+    SECURITY: Timestamps are ALWAYS required to prevent replay attacks.
+    Production uses strict 5-minute window, development uses 30-minute window.
+
     Args:
         timestamp: Unix timestamp from webhook payload.
-        require_timestamp: If True, reject requests without timestamp (default: True for security).
 
     Returns:
         True if timestamp is within acceptable range.
     """
     if timestamp is None:
-        if require_timestamp:
-            logger.warning("Webhook rejected: missing timestamp (replay protection enabled)")
-            return False
-        else:
-            # Only allow missing timestamps in development/testing
-            logger.warning("Webhook received without timestamp - replay protection disabled")
-            return True
+        # SECURITY: Always require timestamps - replay attacks are possible without them
+        logger.warning("Webhook rejected: missing timestamp (replay protection)")
+        return False
 
     current_time = int(time.time())
     age = abs(current_time - timestamp)
 
-    if age > WEBHOOK_MAX_AGE_SECONDS:
+    # Use stricter window in production
+    max_age = WEBHOOK_MAX_AGE_SECONDS_PRODUCTION if settings.is_production else WEBHOOK_MAX_AGE_SECONDS_DEVELOPMENT
+
+    if age > max_age:
         logger.warning(
-            f"Webhook timestamp too old: {age}s (max: {WEBHOOK_MAX_AGE_SECONDS}s)"
+            f"Webhook timestamp too old: {age}s (max: {max_age}s)"
         )
         return False
 
@@ -159,13 +163,13 @@ async def helius_webhook(
             detail="Batch too large. Maximum 100 transactions per request."
         )
 
-    # Validate webhook timestamp from first transaction (if available)
-    # Helius includes timestamp in transaction metadata
-    # In production, require timestamps to prevent replay attacks
+    # Validate webhook timestamp from first transaction
+    # SECURITY: Always require timestamps to prevent replay attacks
+    # Helius includes timestamp in transaction metadata (blockTime or timestamp)
     if transactions:
         first_tx = transactions[0]
         tx_timestamp = first_tx.get("timestamp") or first_tx.get("blockTime")
-        if not validate_webhook_timestamp(tx_timestamp, require_timestamp=settings.is_production):
+        if not validate_webhook_timestamp(tx_timestamp):
             raise HTTPException(
                 status_code=400,
                 detail="Webhook timestamp missing or too old. Possible replay attack."

@@ -154,7 +154,7 @@ class BuybackService:
                     "inputMint": SOL_MINT,
                     "outputMint": self.token_mint,
                     "amount": str(sol_amount_lamports),
-                    "slippageBps": settings.jupiter_slippage_bps,  # Configurable slippage (default 0.5%)
+                    "slippageBps": settings.safe_slippage_bps,  # Capped slippage (max 2% to prevent MEV)
                     "onlyDirectRoutes": False,
                     "asLegacyTransaction": False
                 }

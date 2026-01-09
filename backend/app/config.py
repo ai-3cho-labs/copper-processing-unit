@@ -77,7 +77,16 @@ class Settings(BaseSettings):
     # Jupiter Swap Settings
     # Slippage in basis points (100 = 1%, 50 = 0.5%)
     # Lower slippage protects against MEV sandwich attacks but may cause swap failures
+    # SECURITY: Capped at 200 bps (2%) to prevent excessive MEV extraction
     jupiter_slippage_bps: int = 50  # 0.5% slippage (default, configurable via env)
+
+    # Maximum allowed slippage (security cap to prevent MEV attacks)
+    jupiter_max_slippage_bps: int = 200  # 2% maximum
+
+    @property
+    def safe_slippage_bps(self) -> int:
+        """Get slippage capped at maximum safe value to prevent MEV exploitation."""
+        return min(self.jupiter_slippage_bps, self.jupiter_max_slippage_bps)
 
     # Monitoring
     sentry_dsn: str = ""

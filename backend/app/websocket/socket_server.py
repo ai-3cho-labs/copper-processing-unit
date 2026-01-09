@@ -109,15 +109,31 @@ def get_client_ip(environ: dict) -> str:
 
     Handles X-Forwarded-For header for reverse proxies.
 
-    WARNING: X-Forwarded-For can be spoofed by clients. In production,
-    ensure your reverse proxy (nginx, etc.) overwrites this header.
+    SECURITY WARNING: X-Forwarded-For can be spoofed by clients!
+
+    PRODUCTION REQUIREMENT: Your reverse proxy (Koyeb, nginx, etc.) MUST:
+    1. Set X-Forwarded-For to the actual client IP
+    2. Overwrite (not append to) any existing X-Forwarded-For header
+    3. Not trust upstream X-Forwarded-For values
+
+    Koyeb automatically handles this correctly for incoming requests.
+    If using a different proxy, configure it accordingly.
+
+    Without proper proxy configuration, attackers can:
+    - Bypass per-IP rate limiting by spoofing different IPs
+    - Evade IP-based blocking or monitoring
     """
     # Check for forwarded header (from reverse proxy)
     forwarded = environ.get("HTTP_X_FORWARDED_FOR", "")
     if forwarded:
-        # First IP in the list is the original client
-        # In production, ensure proxy overwrites this header
-        return forwarded.split(",")[0].strip()
+        # First IP in the list is the original client (set by outermost proxy)
+        # Validate it looks like an IP address (basic sanity check)
+        client_ip = forwarded.split(",")[0].strip()
+        # Basic validation: should contain only IP-valid characters
+        if client_ip and all(c in "0123456789.:" for c in client_ip):
+            return client_ip
+        # If malformed, log and fall through to direct client
+        logger.warning(f"Malformed X-Forwarded-For header: {forwarded[:50]}")
 
     # Fall back to direct client address
     client = environ.get("asgi.scope", {}).get("client", ("unknown", 0))

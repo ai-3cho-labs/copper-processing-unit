@@ -269,6 +269,15 @@ class HeliusService:
             logger.error(f"Error parsing webhook transaction: {e}")
             return None
 
+    def _get_auth_headers(self) -> dict:
+        """
+        Get authorization headers for Helius API requests.
+
+        SECURITY: Uses Authorization header instead of query parameters
+        to prevent API key exposure in logs, referer headers, and browser history.
+        """
+        return {"Authorization": f"Bearer {self.api_key}"}
+
     async def setup_webhook(self, webhook_url: str) -> Optional[str]:
         """
         Create or update Helius webhook for token monitoring.
@@ -284,7 +293,8 @@ class HeliusService:
 
         try:
             response = await self.client.post(
-                f"{HELIUS_API_BASE}/webhooks?api-key={self.api_key}",
+                f"{HELIUS_API_BASE}/webhooks",
+                headers=self._get_auth_headers(),
                 json={
                     "webhookURL": webhook_url,
                     "transactionTypes": ["SWAP"],
@@ -313,7 +323,8 @@ class HeliusService:
         """
         try:
             response = await self.client.get(
-                f"{HELIUS_API_BASE}/webhooks?api-key={self.api_key}"
+                f"{HELIUS_API_BASE}/webhooks",
+                headers=self._get_auth_headers()
             )
             response.raise_for_status()
             return response.json()
@@ -333,7 +344,8 @@ class HeliusService:
         """
         try:
             response = await self.client.delete(
-                f"{HELIUS_API_BASE}/webhooks/{webhook_id}?api-key={self.api_key}"
+                f"{HELIUS_API_BASE}/webhooks/{webhook_id}",
+                headers=self._get_auth_headers()
             )
             response.raise_for_status()
             logger.info(f"Webhook deleted: {webhook_id}")

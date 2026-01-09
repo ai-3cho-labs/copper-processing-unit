@@ -74,6 +74,9 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,  # One task at a time
     task_acks_late=True,  # Acknowledge after completion
     task_reject_on_worker_lost=True,
+    # SECURITY: Expire task results after 1 hour to limit data retention in Redis
+    # Task results may contain wallet addresses and transaction data
+    result_expires=3600,  # 1 hour
 )
 
 # Beat schedule (periodic tasks)
