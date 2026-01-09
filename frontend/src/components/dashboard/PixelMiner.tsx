@@ -3,10 +3,10 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { cn } from '@/lib/cn';
 
-// Drill sprite sheet: 3 columns × 4 rows, each frame 64×64px (192×256 total)
-const DRILL_FRAME_WIDTH = 64;
-const DRILL_FRAME_HEIGHT = 64;
-const DRILL_COLUMNS = 3;
+// Pickaxe sprite sheet: 7 columns × 4 rows, each frame 64×64px (448×256 total)
+const PICKAXE_FRAME_WIDTH = 64;
+const PICKAXE_FRAME_HEIGHT = 64;
+const PICKAXE_COLUMNS = 7;
 
 // Idle sprite sheet: 2 columns × 4 rows, each frame 64×64px (128×256 total)
 const IDLE_FRAME_WIDTH = 64;
@@ -21,11 +21,11 @@ const ORE_FRAME_SIZE = 16;
 const COPPER_ORE_ROW = 2; // Row 2 for medium-sized ore nugget
 const COPPER_ORE_COL = 7; // Column 7 is copper (matches tiles-config.ts)
 
-// Animation rows in drill sprite sheet
-const DRILL_ANIMATION_ROWS = {
-  drilling: 0,     // Drilling forward
-  drillingAlt: 1,  // Drilling from different angle
-  drillingDown: 2, // Drilling downward
+// Animation rows in pickaxe sprite sheet
+const PICKAXE_ANIMATION_ROWS = {
+  mining: 0,       // Mining forward
+  miningAlt: 1,    // Mining from different angle
+  miningDown: 2,   // Mining downward
 } as const;
 
 // Idle sprite sheet layout: 4 directions × 2 frames = 8 sprites
@@ -34,20 +34,20 @@ const DRILL_ANIMATION_ROWS = {
 const IDLE_FRAMES = [0, 1];  // Frames to cycle through for idle (col 0 and col 1)
 const IDLE_FRAME_ROW = 0;
 
-type AnimationState = 'drilling' | 'drillingAlt' | 'drillingDown' | 'idle';
+type AnimationState = 'mining' | 'miningAlt' | 'miningDown' | 'idle';
 
 // Per-frame X offsets to anchor character in place (if needed for sprite drift)
 const FRAME_OFFSETS: Record<AnimationState, number[]> = {
-  drilling:     [0, 0, 0],
-  drillingAlt:  [0, 0, 0],
-  drillingDown: [0, 0, 0],
-  idle:         [0, 0, 0],
+  mining:       [0, 0, 0, 0, 0, 0, 0],
+  miningAlt:    [0, 0, 0, 0, 0, 0, 0],
+  miningDown:   [0, 0, 0, 0, 0, 0, 0],
+  idle:         [0, 0],
 };
 
 interface PixelMinerProps {
   scale?: number;
   animation?: AnimationState;
-  /** Milliseconds per frame for drilling animation */
+  /** Milliseconds per frame for mining animation */
   frameTime?: number;
   /** Milliseconds per frame for idle animation (default: 500) */
   idleFrameTime?: number;
@@ -64,11 +64,11 @@ interface PixelMinerProps {
   rewardAmount?: number;
 }
 
-// Sprite layer paths (drill animation)
-const DRILL_SPRITE_LAYERS = [
-  '/sprites/character/tools_drill/character_body/character_tools_drill_body_light_with_specs.png',
-  '/sprites/character/tools_drill/clothes/full_body/overhalls/character_tools_drill_clothes_fullbody_overhalls_blue.png',
-  '/sprites/character/tools_drill/hairstyles/radical_curve/character_tools_drill_hairstyles_radical_curve_brown_dark.png',
+// Sprite layer paths (pickaxe animation)
+const PICKAXE_SPRITE_LAYERS = [
+  '/sprites/character/tools_pickaxe/character_body/character_tools_pickaxe_body_light.png',
+  '/sprites/character/tools_pickaxe/clothes/fullbody/overhalls/character_tools_pickaxe_clothes_fullbody_overhalls_blue.png',
+  '/sprites/character/tools_pickaxe/hairstyles/radical_curve/character_tools_pickaxe_hairstyles_radical_curve_brown_dark.png',
 ];
 
 // Sprite layer paths (idle animation)
@@ -82,12 +82,12 @@ const IDLE_SPRITE_LAYERS = [
 /**
  * Canvas-based animated pixel miner.
  * Uses requestAnimationFrame for smooth, frame-perfect animation.
- * Supports auto-collect cycle: drilling → idle with ore → drilling
+ * Supports auto-collect cycle: mining → idle with ore → mining
  */
 export function PixelMiner({
   scale = 2,
-  animation: externalAnimation = 'drilling',
-  frameTime = 150, // 150ms per frame (~7 FPS for drill vibration effect)
+  animation: externalAnimation = 'mining',
+  frameTime = 150, // 150ms per frame (~7 FPS for pickaxe swing effect)
   idleFrameTime = 500, // 500ms per frame (~2 FPS for relaxed idle)
   className,
   flipX = false,
@@ -97,7 +97,7 @@ export function PixelMiner({
   rewardAmount,
 }: PixelMinerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drillImagesRef = useRef<HTMLImageElement[]>([]);
+  const pickaxeImagesRef = useRef<HTMLImageElement[]>([]);
   const idleImagesRef = useRef<HTMLImageElement[]>([]);
   const oreImageRef = useRef<HTMLImageElement | null>(null);
   const frameRef = useRef(0);
@@ -118,9 +118,9 @@ export function PixelMiner({
   const isIdle = currentAnimation === 'idle';
 
   // Use appropriate frame dimensions based on animation state
-  const frameWidth = isIdle ? IDLE_FRAME_WIDTH : DRILL_FRAME_WIDTH;
-  const frameHeight = isIdle ? IDLE_FRAME_HEIGHT : DRILL_FRAME_HEIGHT;
-  const columns = isIdle ? IDLE_COLUMNS : DRILL_COLUMNS;
+  const frameWidth = isIdle ? IDLE_FRAME_WIDTH : PICKAXE_FRAME_WIDTH;
+  const frameHeight = isIdle ? IDLE_FRAME_HEIGHT : PICKAXE_FRAME_HEIGHT;
+  const columns = isIdle ? IDLE_COLUMNS : PICKAXE_COLUMNS;
 
   // Sprite size
   const spriteWidth = Math.floor(frameWidth * scale);
@@ -133,12 +133,12 @@ export function PixelMiner({
   const height = spriteHeight + rewardSpace;
 
   // Get current row based on animation state
-  const row = isIdle ? IDLE_FRAME_ROW : DRILL_ANIMATION_ROWS[currentAnimation as keyof typeof DRILL_ANIMATION_ROWS];
+  const row = isIdle ? IDLE_FRAME_ROW : PICKAXE_ANIMATION_ROWS[currentAnimation as keyof typeof PICKAXE_ANIMATION_ROWS];
 
   const render = useCallback(() => {
     const canvas = canvasRef.current;
-    const images = isIdle ? idleImagesRef.current : drillImagesRef.current;
-    const requiredLayers = isIdle ? IDLE_SPRITE_LAYERS.length : DRILL_SPRITE_LAYERS.length;
+    const images = isIdle ? idleImagesRef.current : pickaxeImagesRef.current;
+    const requiredLayers = isIdle ? IDLE_SPRITE_LAYERS.length : PICKAXE_SPRITE_LAYERS.length;
 
     if (!canvas || images.length < requiredLayers) return;
 
@@ -151,7 +151,7 @@ export function PixelMiner({
     // Disable smoothing for pixel art
     ctx.imageSmoothingEnabled = false;
 
-    // Use idle frames array for idle, animated frame cycling for drilling
+    // Use idle frames array for idle, animated frame cycling for mining
     const frame = isIdle
       ? (IDLE_FRAMES[frameRef.current % IDLE_FRAMES.length] ?? 0)
       : (frameRef.current % columns);
@@ -333,16 +333,16 @@ export function PixelMiner({
       });
     };
 
-    // Load drill character sprites
-    Promise.all(DRILL_SPRITE_LAYERS.map(loadImage))
+    // Load pickaxe character sprites
+    Promise.all(PICKAXE_SPRITE_LAYERS.map(loadImage))
       .then((loadedImages) => {
         if (mounted) {
-          drillImagesRef.current = loadedImages;
+          pickaxeImagesRef.current = loadedImages;
           render();
         }
       })
       .catch((err) => {
-        console.error('Failed to load drill sprites:', err);
+        console.error('Failed to load pickaxe sprites:', err);
       });
 
     // Load idle character sprites
@@ -392,7 +392,7 @@ export function PixelMiner({
     render();
   }, [currentAnimation, render]);
 
-  // Auto-collect cycle: drilling → idle with ore → drilling
+  // Auto-collect cycle: mining → idle with ore → mining
   useEffect(() => {
     if (!autoCollect) return;
 
@@ -410,10 +410,10 @@ export function PixelMiner({
         setShowOre(true);
         setRewardAnimProgress(0); // Reset animation
 
-        // After collectDuration, resume drilling
+        // After collectDuration, resume mining
         resumeTimer = setTimeout(() => {
           setShowOre(false);
-          setInternalAnimation('drilling');
+          setInternalAnimation('mining');
           startCycle(); // Restart the cycle
         }, collectDuration);
       }, collectInterval);

@@ -138,7 +138,7 @@ export function MinerDisplay({ onViewDetails, className }: MinerDisplayProps) {
       <div className="hidden lg:flex flex-col items-center gap-6">
         {/* Mine Tilemap with Miner */}
         <MineTilemap scale={4} minerPosition={{ x: 0.5, y: 1.8 }}>
-          <PixelMiner scale={4} animation="drilling" frameTime={150} />
+          <PixelMiner scale={4} animation="mining" frameTime={150} />
         </MineTilemap>
 
         {/* Stats Cards */}
@@ -214,7 +214,7 @@ export function MinerDisplay({ onViewDetails, className }: MinerDisplayProps) {
 
         {/* Mine Tilemap with Miner */}
         <MineTilemap scale={2.5} minerPosition={{ x: 0.5, y: 1.8 }}>
-          <PixelMiner scale={2.5} animation="drilling" frameTime={150} />
+          <PixelMiner scale={2.5} animation="mining" frameTime={150} />
         </MineTilemap>
 
         {/* Stats Grid */}
